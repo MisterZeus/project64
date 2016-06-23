@@ -19,14 +19,14 @@ class CModifiedComboBoxT :
 public:
 	// Constructors
 	CModifiedComboBoxT(TParam defaultValue, HWND hWnd = NULL, bool AllwaysSelected = true) : 
-	    CComboBox(hWnd),
-		m_defaultValue(defaultValue),
-		m_AllwaysSelected(AllwaysSelected),
+		CComboBox(hWnd),
 		m_Changed(false),
 		m_Reset(false),
+		m_defaultValue(defaultValue),
 		m_BoldFont(NULL),
 		m_OriginalFont(NULL),
-		m_TextField(NULL)
+		m_TextField(NULL),
+		m_AllwaysSelected(AllwaysSelected)
 	{ 		
 	}
 	
@@ -59,7 +59,20 @@ public:
 		return indx;
 	}
 
-	void SetReset ( bool Reset )
+	int AddItemW (LPCWSTR strItem, const TParam & lParam) 
+	{
+		int indx = AddStringW(strItem);
+		TParam * Value = new TParam(lParam);
+		SetItemData(indx,(DWORD_PTR)(Value));
+		m_ParamList.push_back(Value);
+		if ((m_AllwaysSelected && GetCount() == 1) || m_defaultValue == lParam) 
+		{ 
+			SetCurSel(indx);
+		}
+		return indx;
+	}
+
+    void SetReset ( bool Reset )
 	{
 		m_Reset = Reset;
 		if (m_Reset)

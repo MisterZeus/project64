@@ -25,6 +25,8 @@ enum SettingID {
 	SupportFile_SettingsDefault, 
 	SupportFile_RomDatabase,
 	SupportFile_RomDatabaseDefault,
+	SupportFile_Glide64RDB,
+	SupportFile_Glide64RDBDefault,
 	SupportFile_Cheats,
 	SupportFile_CheatsDefault,
 	SupportFile_Notes,
@@ -90,13 +92,18 @@ enum SettingID {
 	Rdb_SMM_Protect,
 	Rdb_SMM_ValidFunc,
 	Rdb_GameCheatFix,
+	Rdb_GameCheatFixPlugin,
 	Rdb_ViRefreshRate,
 	Rdb_AiCountPerBytes,
+	Rdb_AudioResetOnLoad,
+	Rdb_AllowROMWrites,
+	Rdb_CRC_Recalc,
 
 	//Individual Game Settings
 	Game_IniKey,
 	Game_GameName,
 	Game_GoodName,
+	Game_TempLoaded,
 	Game_SystemType,
 	Game_EditPlugin_Gfx,
 	Game_EditPlugin_Audio,
@@ -135,6 +142,9 @@ enum SettingID {
 	Game_LoadRomToMemory,
 	Game_ViRefreshRate,
 	Game_AiCountPerBytes,
+	Game_AudioResetOnLoad,
+	Game_AllowROMWrites,
+	Game_CRC_Recalc,
 
 	// General Game running info
 	GameRunning_LoadingInProgress,
@@ -217,32 +227,17 @@ enum SettingID {
 	Debugger_ShowDListAListCount,
 	Debugger_ShowRecompMemSize,
 
-#ifdef BETA_RELEASE
-	//Beta Information
-	Beta_IsBetaVersion,
-	Beta_UserName,
-	Beta_UserNameMD5,
-	Beta_EmailAddress,
-	Beta_EmailAddressMD5,
-	Beta_IsValidExe,
-#endif
-
 	//Plugins
 	Plugin_RSP_Current,
 	Plugin_RSP_CurVer,
-	Plugin_RSP_Changed,
 	Plugin_GFX_Current,
 	Plugin_GFX_CurVer,
-	Plugin_GFX_Changed,
 	Plugin_AUDIO_Current,
 	Plugin_AUDIO_CurVer,
-	Plugin_AUDIO_Changed,
 	Plugin_CONT_Current,
 	Plugin_CONT_CurVer,
-	Plugin_CONT_Changed,
 	Plugin_UseHleGfx,
 	Plugin_UseHleAudio,
-
 
 	//Cheats
 	Cheat_Entry,

@@ -82,7 +82,6 @@ namespace N64_BUTTONS
 typedef struct _XCONTROLLER		// XInput controller struct
 {
 	int nControl;
-	bool bConnected;
 	bool bConfigured;
 
 	struct _N64_BUTTONS			// For button configurations
@@ -105,6 +104,12 @@ typedef struct _XCONTROLLER		// XInput controller struct
 
 typedef XCONTROLLER *LPXCONTROLLER;
 
+extern int iXinputControlId;
+
+//Initiates XInput library
+bool InitXinput();
+//Free the Xinput library
+void FreeXinput();
 // Sets the keys pressed for Xinput controller gController, into keys.
 void GetXInputControllerKeys( const int indexController, LPDWORD Keys );
 // Sets the default keys for Xinput controller gController.
@@ -113,6 +118,9 @@ void DefaultXInputControllerKeys( LPXCONTROLLER gController);
 void VibrateXInputController( DWORD nController, int LeftMotorVal = 65535, int RightMotorVal = 65535 );
 // Initialize nControl XInput enabled controller
 bool InitiateXInputController( LPXCONTROLLER gController, int nControl );
+
+static DWORD(WINAPI * fnXInputGetState) (DWORD dwUserIndex, XINPUT_STATE* pState) = NULL;
+static DWORD(WINAPI * fnXInputSetState) (DWORD dwUserIndex, XINPUT_VIBRATION* pVibration) = NULL;
 
 // XController dialog
 

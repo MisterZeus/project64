@@ -10,18 +10,21 @@
 ****************************************************************************/
 #include "stdafx.h"
 
-CFlashram::CFlashram (bool ReadOnly):
+CFlashram::CFlashram(bool ReadOnly):
+	m_FlashRamPointer(NULL),
 	m_FlashFlag(FLASHRAM_MODE_NOPES),
 	m_FlashStatus(0),
-	m_FlashRamPointer(NULL),
 	m_FlashRAM_Offset(0),
 	m_ReadOnly(ReadOnly),
 	m_hFile(NULL)
 {
+	
 }
 
-CFlashram::~CFlashram (void) {
-	if (m_hFile) {
+CFlashram::~CFlashram()
+{
+	if (m_hFile)
+	{
 		CloseHandle(m_hFile);
 		m_hFile = NULL;
 	}
@@ -32,16 +35,21 @@ void CFlashram::DmaFromFlashram ( BYTE * dest, int StartOffset, int len)
 	BYTE FlipBuffer[0x10000];
 	DWORD dwRead, count;
 
-	switch (m_FlashFlag) {
+	switch (m_FlashFlag)
+	{
 	case FLASHRAM_MODE_READ:
-		if (m_hFile == NULL) {
-			if (!LoadFlashram()) { return; }
+		if (m_hFile == NULL)
+		{
+			if (!LoadFlashram())
+			{
+				return;
+			}
 		}
 		if (len > 0x10000) 
 		{
 			if (bHaveDebugger())
 			{
-				g_Notify->DisplayError("DmaFromFlashram FlipBuffer to small (len: %d)",len); 
+				g_Notify->DisplayError(L"DmaFromFlashram FlipBuffer to small (len: %d)",len); 
 			}
 			len = 0x10000;
 		}
@@ -49,7 +57,7 @@ void CFlashram::DmaFromFlashram ( BYTE * dest, int StartOffset, int len)
 		{
 			if (bHaveDebugger())
 			{
-				g_Notify->DisplayError("Unaligned flash ram read ???");
+				g_Notify->DisplayError(L"Unaligned flash ram read ???");
 			}
 			return;
 		}
@@ -57,22 +65,18 @@ void CFlashram::DmaFromFlashram ( BYTE * dest, int StartOffset, int len)
 		StartOffset = StartOffset << 1;
 		SetFilePointer(m_hFile,StartOffset,NULL,FILE_BEGIN);	
 		ReadFile(m_hFile,FlipBuffer,len,&dwRead,NULL);
-		for (count = dwRead; (int)count < len; count ++) {
+		for (count = dwRead; (int)count < len; count ++)
+		{
 			FlipBuffer[count] = 0xFF;
 		}
-		_asm {
-			mov edi, dest
-			lea ecx, [FlipBuffer]
-			mov edx, 0
-			mov ebx, len
 
-		memcpyloop:
-			mov eax, dword ptr [ecx + edx]
-			;bswap eax
-			mov  dword ptr [edi + edx],eax
-			add edx, 4
-			cmp edx, ebx
-			jb memcpyloop
+		for (count = 0; (int)count < len; count += 4)
+		{
+			register DWORD eax;
+
+			eax = *(unsigned __int32 *)&FlipBuffer[count];
+		//	eax = swap32by8(eax); // ; bswap eax
+			*(unsigned __int32 *)(dest + count) = eax;
 		}
 		break;
 	case FLASHRAM_MODE_STATUS:
@@ -80,7 +84,7 @@ void CFlashram::DmaFromFlashram ( BYTE * dest, int StartOffset, int len)
 		{
 			if (bHaveDebugger())
 			{
-				g_Notify->DisplayError("Reading m_FlashStatus not being handled correctly\nStart: %X len: %X",StartOffset,len);
+				g_Notify->DisplayError(L"Reading m_FlashStatus not being handled correctly\nStart: %X len: %X",StartOffset,len);
 			}
 		}
 		*((DWORD *)(dest)) = (DWORD)((m_FlashStatus >> 32) & 0xFFFFFFFF);
@@ -89,20 +93,22 @@ void CFlashram::DmaFromFlashram ( BYTE * dest, int StartOffset, int len)
 	default:
 		if (bHaveDebugger())
 		{
-			g_Notify->DisplayError("DmaFromFlashram Start: %X, Offset: %X len: %X",dest - g_MMU->Rdram(),StartOffset,len);
+			g_Notify->DisplayError(L"DmaFromFlashram Start: %X, Offset: %X len: %X",dest - g_MMU->Rdram(),StartOffset,len);
 		}
 	}
 }
 
-void CFlashram::DmaToFlashram(BYTE * Source, int StartOffset, int len) {
-	switch (m_FlashFlag) {
+void CFlashram::DmaToFlashram(BYTE * Source, int StartOffset, int len)
+{
+	switch (m_FlashFlag)
+	{
 	case FLASHRAM_MODE_WRITE:
 		m_FlashRamPointer = Source;
 		break;
 	default:
 		if (bHaveDebugger())
 		{
-			g_Notify->DisplayError("DmaToFlashram Start: %X, Offset: %X len: %X",Source - g_MMU->Rdram(),StartOffset,len);
+			g_Notify->DisplayError(L"DmaToFlashram Start: %X, Offset: %X len: %X",Source - g_MMU->Rdram(),StartOffset,len);
 		}
 	}
 }
@@ -110,19 +116,21 @@ void CFlashram::DmaToFlashram(BYTE * Source, int StartOffset, int len) {
 
 DWORD CFlashram::ReadFromFlashStatus (DWORD PAddr) 
 {
-	switch (PAddr) {
+	switch (PAddr)
+	{
 	case 0x08000000: return (DWORD)(m_FlashStatus >> 32);
 	default:
 		if (bHaveDebugger())
 		{
-			g_Notify->DisplayError("Reading from flash ram status (%X)",PAddr);
+			g_Notify->DisplayError(L"Reading from flash ram status (%X)",PAddr);
 		}
 		break;
 	}
 	return (DWORD)(m_FlashStatus >> 32);
 }
 
-bool CFlashram::LoadFlashram (void) {
+bool CFlashram::LoadFlashram()
+{
 	CPath FileName;
 
 	FileName.SetDriveDirectory( g_Settings->LoadString(Directory_NativeSave).c_str());
@@ -146,46 +154,50 @@ bool CFlashram::LoadFlashram (void) {
 	return true;
 }
 
-void CFlashram::WriteToFlashCommand(DWORD FlashRAM_Command) {
+void CFlashram::WriteToFlashCommand(DWORD FlashRAM_Command)
+{
 	BYTE EmptyBlock[128];
 	DWORD dwWritten;
 
-	switch (FlashRAM_Command & 0xFF000000) {
+	switch (FlashRAM_Command & 0xFF000000)
+	{
 	case 0xD2000000: 
-		switch (m_FlashFlag) {
+		switch (m_FlashFlag)
+		{
 		case FLASHRAM_MODE_NOPES: break;
 		case FLASHRAM_MODE_READ: break;
 		case FLASHRAM_MODE_STATUS: break;
 		case FLASHRAM_MODE_ERASE:
 			memset(EmptyBlock,0xFF,sizeof(EmptyBlock));
 			if (m_hFile == NULL) {
-				if (!LoadFlashram()) { return; }
+				if (!LoadFlashram())
+				{
+					return;
+				}
 			}
 			SetFilePointer(m_hFile,m_FlashRAM_Offset,NULL,FILE_BEGIN);	
 			WriteFile(m_hFile,EmptyBlock,128,&dwWritten,NULL);
 			break;
 		case FLASHRAM_MODE_WRITE:
 			if (m_hFile == NULL) {
-				if (!LoadFlashram()) { return; }
+				if (!LoadFlashram())
+				{
+					return;
+				}
 			}
 			{
 				BYTE FlipBuffer[128];
-				DWORD dwWritten;
+				register size_t edx;
 				BYTE * FlashRamPointer = m_FlashRamPointer;
 
 				memset(FlipBuffer,0,sizeof(FlipBuffer));
-				_asm {
-					lea edi, [FlipBuffer]
-					mov ecx, FlashRamPointer
-					mov edx, 0
+				for (edx = 0; edx < 128; edx += 4)
+				{
+					register DWORD eax;
 
-				memcpyloop:
-					mov eax, dword ptr [ecx + edx]
-					;bswap eax
-					mov  dword ptr [edi + edx],eax
-					add edx, 4
-					cmp edx, 128
-					jb memcpyloop
+					eax = *(unsigned __int32 *)&FlashRamPointer[edx];
+				//	eax = swap32by8(eax); // ; bswap eax
+					*(unsigned __int32 *)(FlipBuffer + edx) = eax;
 				}
 
 				SetFilePointer(m_hFile,m_FlashRAM_Offset,NULL,FILE_BEGIN);	
@@ -193,13 +205,13 @@ void CFlashram::WriteToFlashCommand(DWORD FlashRAM_Command) {
 			}
 			break;
 		default:
-			g_Notify->DisplayError("Writing %X to flash ram command register\nm_FlashFlag: %d",FlashRAM_Command,m_FlashFlag);
+			g_Notify->DisplayError(L"Writing %X to flash ram command register\nm_FlashFlag: %d",FlashRAM_Command,m_FlashFlag);
 		}
 		m_FlashFlag = FLASHRAM_MODE_NOPES;
 		break;
 	case 0xE1000000: 
 		m_FlashFlag = FLASHRAM_MODE_STATUS;
-		m_FlashStatus = 0x1111800100C20000;
+		m_FlashStatus = 0x1111800100C2001E;
 		break;
 	case 0xF0000000: 
 		m_FlashFlag = FLASHRAM_MODE_READ;
@@ -210,19 +222,19 @@ void CFlashram::WriteToFlashCommand(DWORD FlashRAM_Command) {
 		break;
 	case 0x78000000:
 		m_FlashFlag = FLASHRAM_MODE_ERASE;
-		m_FlashStatus = 0x1111800800C20000;
+		m_FlashStatus = 0x1111800800C2001E;
 		break;
 	case 0xB4000000: 
 		m_FlashFlag = FLASHRAM_MODE_WRITE; //????
 		break;
 	case 0xA5000000:
 		m_FlashRAM_Offset = (FlashRAM_Command & 0xffff) * 128;
-		m_FlashStatus = 0x1111800400C20000;
+		m_FlashStatus = 0x1111800400C2001E;
 		break;
 	default:
 		if (bHaveDebugger())
 		{
-			g_Notify->DisplayError("Writing %X to flash ram command register",FlashRAM_Command);
+			g_Notify->DisplayError(L"Writing %X to flash ram command register",FlashRAM_Command);
 		}
 	}
 }

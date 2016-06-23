@@ -26,6 +26,9 @@
 #include "resource.h"
 #include <stdio.h>
 
+//We need to keep track of XInput control id's
+int iXinputControlId = 0;
+
 BOOL IsXInputDevice( const GUID* pGuidProductFromDirectInput )
 {
     IWbemLocator*           pIWbemLocator  = NULL;
@@ -140,7 +143,7 @@ LCleanup:
 void AxisDeadzone( SHORT &AxisValue, long  lDeadZoneValue, float fDeadZoneRelation )
 {
 	short sign = AxisValue < 0 ? -1 : 1;
-	float value = AxisValue < 0 ? -AxisValue : AxisValue;
+	float value = (float)(AxisValue < 0 ? -AxisValue : AxisValue);
 
 	if(value < lDeadZoneValue)
 		value = 0;
@@ -155,6 +158,11 @@ void AxisDeadzone( SHORT &AxisValue, long  lDeadZoneValue, float fDeadZoneRelati
 
 void GetXInputControllerKeys( const int indexController, LPDWORD Keys )
 {
+	if (fnXInputGetState == NULL)
+	{
+		return;
+	}
+
 	using namespace N64_BUTTONS;
 
 	LPCONTROLLER pcController = &g_pcControllers[indexController];
@@ -168,7 +176,7 @@ void GetXInputControllerKeys( const int indexController, LPDWORD Keys )
 	DWORD result;
 	XINPUT_STATE state;
 
-	result = XInputGetState(gController->nControl, &state);
+	result = fnXInputGetState(gController->nControl, &state);
 
 	if( result != ERROR_SUCCESS )
 		return;
@@ -286,6 +294,11 @@ void DefaultXInputControllerKeys( LPXCONTROLLER gController)
 
 void VibrateXInputController( DWORD nController, int LeftMotorVal, int RightMotorVal )
 {
+	if (fnXInputSetState == NULL)
+	{
+		return;
+	}
+
 	XINPUT_VIBRATION vibration;
 
 	ZeroMemory( &vibration, sizeof( XINPUT_VIBRATION ) );
@@ -293,23 +306,54 @@ void VibrateXInputController( DWORD nController, int LeftMotorVal, int RightMoto
 	vibration.wLeftMotorSpeed = LeftMotorVal;
 	vibration.wRightMotorSpeed = RightMotorVal;
 
-	XInputSetState( nController, &vibration );
+	fnXInputSetState(nController, &vibration);
+}
+
+bool InitXinput()
+{
+	//Lets dynamically load in the XInput library
+	if (g_hXInputDLL == NULL)
+		g_hXInputDLL = LoadLibrary("Xinput1_4.dll");
+
+	if (g_hXInputDLL == NULL)
+	{
+		//Ok since 1.4 is present, try 9.1.0 as its present on Vista and newer
+		g_hXInputDLL = LoadLibrary("Xinput9_1_0.dll");
+	}
+	if (g_hXInputDLL == NULL)
+	{
+		return false;
+	}
+
+	//Prepare the functions where going to use, nice and simple for XInput
+	fnXInputSetState = (DWORD(WINAPI *) (DWORD, XINPUT_VIBRATION*))GetProcAddress(g_hXInputDLL, "XInputSetState");
+	fnXInputGetState = (DWORD(WINAPI *) (DWORD, XINPUT_STATE*))GetProcAddress(g_hXInputDLL, "XInputGetState");
+	return true;
+}
+
+void FreeXinput()
+{
+	//Unload the Library
+	if (g_hXInputDLL != NULL)
+	{
+		FreeLibrary(g_hXInputDLL);
+		g_hXInputDLL = NULL;
+	}
 }
 
 bool InitiateXInputController( LPXCONTROLLER gController, int nControl )
 {
-	DWORD result;
-	XINPUT_STATE state;
-
-	ZeroMemory( &state, sizeof( XINPUT_STATE ) );
-	result = XInputGetState( nControl, &state );
-
-	gController->bConnected = result == ERROR_SUCCESS;
-	gController->nControl = nControl;
+	if (fnXInputGetState == NULL || fnXInputSetState == NULL)
+	{
+		return false;
+	}
 	
+	gController->nControl = iXinputControlId;
+	iXinputControlId++;
+
 	TCHAR buffer[MAX_PATH];
-	GetDirectory( buffer, DIRECTORY_DLL );
-	_stprintf_s( buffer, _T("%sXInput Controller %d Config.xcc"), buffer, gController->nControl + 1 );
+	GetDirectory( buffer, DIRECTORY_CONFIG );
+	_stprintf_s( buffer, _T("%sXInput Controller %d Config.xcc"), buffer, nControl + 1 );
 	FILE *file = _tfopen( buffer, _T("rS") );
 	if( file )
 	{
@@ -320,7 +364,7 @@ bool InitiateXInputController( LPXCONTROLLER gController, int nControl )
 	if( !gController->bConfigured )
 		DefaultXInputControllerKeys( gController );
 
-	return gController->bConnected;
+	return true;
 }
 
 TCHAR * GetN64ButtonNameFromButtonCode( int Button )
@@ -374,7 +418,7 @@ TCHAR * GetN64ButtonFromXInputControl( LPXCONTROLLER gController, int XInputButt
 	N64ButtonCode |= gController->stButtons.iR & XInputButton ? R : 0;
 	N64ButtonCode |= gController->stButtons.iStart & XInputButton ? Start : 0;
 	N64ButtonCode |= gController->stButtons.iZ & XInputButton ? Z : 0;
-	
+
 	return GetN64ButtonNameFromButtonCode( N64ButtonCode );
 }
 

@@ -100,9 +100,6 @@
     <Filter Include="Header Files\3rd Party Headers">
       <UniqueIdentifier>{21f6da31-289d-4d03-80bb-b77fe60355d7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\3rd Party Headers\HTML Help">
-      <UniqueIdentifier>{53a1d70d-ec39-415a-88eb-70d6b6eaa918}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\3rd Party Headers\Zlib Headers">
       <UniqueIdentifier>{ef4a164b-c5ed-4469-a0e2-4eb21f800b11}</UniqueIdentifier>
     </Filter>
@@ -112,9 +109,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ValidateBinary.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Settings\Debug Settings.cpp">
@@ -408,17 +402,17 @@
     <ClCompile Include="3rd Party\7zip.cpp">
       <Filter>Source Files\3rd Party Source</Filter>
     </ClCompile>
-    <ClCompile Include="3rd Party\Processor Info.cpp">
-      <Filter>Source Files\3rd Party Source</Filter>
-    </ClCompile>
-    <ClCompile Include="3rd Party\zlib\UNZIP.C">
+    <ClCompile Include="..\3rd Party\zlib\contrib\minizip\unzip.c">
       <Filter>Source Files\3rd Party Source\ZLib Source</Filter>
     </ClCompile>
-    <ClCompile Include="3rd Party\zlib\zip.c">
+    <ClCompile Include="..\3rd Party\zlib\contrib\minizip\zip.c">
       <Filter>Source Files\3rd Party Source\ZLib Source</Filter>
     </ClCompile>
     <ClCompile Include="Plugins\Plugin Base.cpp">
       <Filter>Source Files\Plugin Source</Filter>
+    </ClCompile>
+    <ClCompile Include="N64 System\Mips\Rumblepak.cpp">
+      <Filter>Source Files\N64 System Source\Mips Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -486,9 +480,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="User Interface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Validate Binary.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WTL App.h">
@@ -821,29 +812,29 @@
     <ClInclude Include="3rd Party\7zip.h">
       <Filter>Header Files\3rd Party Headers</Filter>
     </ClInclude>
-    <ClInclude Include="3rd Party\Processor Info.h">
-      <Filter>Header Files\3rd Party Headers</Filter>
-    </ClInclude>
     <ClInclude Include="3rd Party\zip.h">
       <Filter>Header Files\3rd Party Headers</Filter>
     </ClInclude>
-    <ClInclude Include="3rd Party\HTML Help\HTMLHELP.H">
-      <Filter>Header Files\3rd Party Headers\HTML Help</Filter>
-    </ClInclude>
-    <ClInclude Include="3rd Party\zlib\UNZIP.H">
+    <ClInclude Include="..\3rd Party\zlib\zconf.h">
       <Filter>Header Files\3rd Party Headers\Zlib Headers</Filter>
     </ClInclude>
-    <ClInclude Include="3rd Party\zlib\ZCONF.H">
+    <ClInclude Include="..\3rd Party\zlib\zlib.h">
       <Filter>Header Files\3rd Party Headers\Zlib Headers</Filter>
     </ClInclude>
-    <ClInclude Include="3rd Party\zlib\zip.h">
+    <ClInclude Include="..\3rd Party\zlib\contrib\minizip\unzip.h">
       <Filter>Header Files\3rd Party Headers\Zlib Headers</Filter>
     </ClInclude>
-    <ClInclude Include="3rd Party\zlib\ZLIB.H">
+    <ClInclude Include="..\3rd Party\zlib\contrib\minizip\zip.h">
       <Filter>Header Files\3rd Party Headers\Zlib Headers</Filter>
     </ClInclude>
     <ClInclude Include="Plugins\Plugin Base.h">
       <Filter>Header Files\Plugin Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="N64 System\Mips\Rumblepak.h">
+      <Filter>Source Files\N64 System Source\Mips Source</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

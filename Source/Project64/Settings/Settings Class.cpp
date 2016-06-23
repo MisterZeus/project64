@@ -67,7 +67,13 @@ void CSettings::AddHandler ( SettingID TypeID, CSettingType * Handler )
 	SETTING_MAP::_Pairib res = m_SettingInfo.insert(SETTING_MAP::value_type(TypeID,Handler));
 	if (!res.second)
 	{
-		delete Handler;
+		delete res.first->second;
+		m_SettingInfo.erase(res.first);
+		res = m_SettingInfo.insert(SETTING_MAP::value_type(TypeID,Handler));
+		if (!res.second)
+		{
+			delete Handler;
+		}
 	}
 }
 
@@ -78,11 +84,12 @@ void CSettings::AddHowToHandleSetting ()
 
 
 	//Support Files
-	AddHandler(SupportFile_SettingsDefault,    new CSettingTypeRelativePath("Config","Project64.cfg"));
 	AddHandler(SupportFile_Settings,           new CSettingTypeApplicationPath("","ConfigFile",SupportFile_SettingsDefault));
 	AddHandler(SupportFile_SettingsDefault,    new CSettingTypeRelativePath("Config","Project64.cfg"));
 	AddHandler(SupportFile_RomDatabase,        new CSettingTypeApplicationPath("","RomDatabase",SupportFile_RomDatabaseDefault));
 	AddHandler(SupportFile_RomDatabaseDefault, new CSettingTypeRelativePath("Config","Project64.rdb"));
+	AddHandler(SupportFile_Glide64RDB,         new CSettingTypeApplicationPath("","Glide64RDB",SupportFile_Glide64RDBDefault));
+	AddHandler(SupportFile_Glide64RDBDefault,  new CSettingTypeRelativePath("Config","Glide64.rdb"));
 	AddHandler(SupportFile_Cheats,             new CSettingTypeApplicationPath("","Cheats",SupportFile_CheatsDefault));
 	AddHandler(SupportFile_CheatsDefault,      new CSettingTypeRelativePath("Config","Project64.cht"));
 	AddHandler(SupportFile_Notes,              new CSettingTypeApplicationPath("","Notes",SupportFile_NotesDefault));
@@ -133,7 +140,11 @@ void CSettings::AddHowToHandleSetting ()
 	AddHandler(Rdb_Status,              new CSettingTypeRomDatabase("Status","Unknown"));
 	AddHandler(Rdb_NotesCore,           new CSettingTypeRomDatabase("Core Note",""));
 	AddHandler(Rdb_NotesPlugin,         new CSettingTypeRomDatabase("Plugin Note",""));
+#ifdef _DEBUG
+	AddHandler(Rdb_FixedAudio,          new CSettingTypeRomDatabase("Fixed Audio",true));
+#else
 	AddHandler(Rdb_FixedAudio,          new CSettingTypeRomDatabase("Fixed Audio",false));
+#endif
 	AddHandler(Rdb_SyncViaAudio,        new CSettingTypeRomDatabase("Sync Audio",true));
 	AddHandler(Rdb_RspAudioSignal,      new CSettingTypeRDBYesNo("Audio Signal",false));
 	AddHandler(Rdb_TLB_VAddrStart,      new CSettingTypeRomDatabase("TLB: Vaddr Start",0));
@@ -142,7 +153,7 @@ void CSettings::AddHowToHandleSetting ()
 	AddHandler(Rdb_UseHleGfx,           new CSettingTypeRomDatabase("HLE GFX",Plugin_UseHleGfx));
 	AddHandler(Rdb_UseHleAudio,         new CSettingTypeRomDatabase("HLE Audio",Plugin_UseHleAudio));
 	AddHandler(Rdb_LoadRomToMemory,     new CSettingTypeRomDatabase("Rom In Memory",false));	
-	AddHandler(Rdb_ScreenHertz,         new CSettingTypeRomDatabase("ScreenHertz",60));	
+	AddHandler(Rdb_ScreenHertz,         new CSettingTypeRomDatabase("ScreenHertz",0));	
 	AddHandler(Rdb_FuncLookupMode,      new CSettingTypeRomDatabase("FuncFind",FuncFind_PhysicalLookup));	
 	AddHandler(Rdb_RegCache,            new CSettingTypeRDBYesNo("Reg Cache",true));	
 	AddHandler(Rdb_BlockLinking,        new CSettingTypeRDBOnOff("Linking",true));	
@@ -153,12 +164,17 @@ void CSettings::AddHowToHandleSetting ()
 	AddHandler(Rdb_SMM_Protect,         new CSettingTypeRomDatabase("SMM-Protect",false));
 	AddHandler(Rdb_SMM_ValidFunc,       new CSettingTypeRomDatabase("SMM-FUNC",true));
 	AddHandler(Rdb_GameCheatFix,        new CSettingTypeRomDatabaseIndex("Cheat","",""));
+	AddHandler(Rdb_GameCheatFixPlugin,  new CSettingTypeRomDatabaseIndex("CheatPlugin","",""));
 	AddHandler(Rdb_ViRefreshRate,       new CSettingTypeRomDatabase("ViRefresh",1500));
 	AddHandler(Rdb_AiCountPerBytes,     new CSettingTypeRomDatabase("AiCountPerBytes",400));
+	AddHandler(Rdb_AudioResetOnLoad,    new CSettingTypeRDBYesNo("AudioResetOnLoad", false));
+	AddHandler(Rdb_AllowROMWrites,      new CSettingTypeRDBYesNo("AllowROMWrites", false));
+	AddHandler(Rdb_CRC_Recalc,          new CSettingTypeRDBYesNo("CRC-Recalc", false));
 	
 	AddHandler(Game_IniKey,             new CSettingTypeTempString(""));
 	AddHandler(Game_GameName,           new CSettingTypeTempString(""));
 	AddHandler(Game_GoodName,           new CSettingTypeGame("Good Name",Rdb_GoodName));
+	AddHandler(Game_TempLoaded,         new CSettingTypeTempBool(false));
 	AddHandler(Game_SystemType,         new CSettingTypeTempNumber(SYSTEM_NTSC));
 	AddHandler(Game_EditPlugin_Gfx,     new CSettingTypeGame("Plugin-Gfx",Default_None));
 	AddHandler(Game_EditPlugin_Audio,   new CSettingTypeGame("Plugin-Audio",Default_None));
@@ -179,7 +195,7 @@ void CSettings::AddHowToHandleSetting ()
 	AddHandler(Game_DelaySI,            new CSettingTypeGame("Delay SI",Rdb_DelaySi));
 	AddHandler(Game_RspAudioSignal,     new CSettingTypeGame("Audio Signal",Rdb_RspAudioSignal));
 	AddHandler(Game_32Bit,              new CSettingTypeGame("32bit",Rdb_32Bit));
-	AddHandler(Game_FastSP,             new CSettingTypeGame("SP Hack",Rdb_FastSP));
+	AddHandler(Game_FastSP,             new CSettingTypeGame("Fast SP",Rdb_FastSP));
 	AddHandler(Game_CurrentSaveState,   new CSettingTypeTempNumber(0));
 	AddHandler(Game_SyncViaAudio,       new CSettingTypeGame("Sync Audio",Rdb_SyncViaAudio));
 	AddHandler(Game_UseHleGfx,          new CSettingTypeGame("HLE GFX",Rdb_UseHleGfx));
@@ -197,6 +213,9 @@ void CSettings::AddHowToHandleSetting ()
 	AddHandler(Game_SMM_ValidFunc,      new CSettingTypeGame("SMM-FUNC",Rdb_SMM_ValidFunc));
 	AddHandler(Game_ViRefreshRate,      new CSettingTypeGame("ViRefresh",Rdb_ViRefreshRate));
 	AddHandler(Game_AiCountPerBytes,    new CSettingTypeGame("AiCountPerBytes",Rdb_AiCountPerBytes));
+	AddHandler(Game_AudioResetOnLoad,   new CSettingTypeGame("AudioResetOnLoad", Rdb_AudioResetOnLoad));
+	AddHandler(Game_AllowROMWrites,     new CSettingTypeGame("AllowROMWrites", Rdb_AllowROMWrites));
+	AddHandler(Game_CRC_Recalc,         new CSettingTypeGame("CRC-Recalc", Rdb_CRC_Recalc));
 
 	//User Interface
 	AddHandler(UserInterface_BasicMode,        new CSettingTypeApplication("","Basic Mode",          (DWORD)true));
@@ -231,11 +250,18 @@ void CSettings::AddHowToHandleSetting ()
 	AddHandler(Directory_GameUseSelected,      new CSettingTypeApplication("Directory","Game - Use Selected",false));
 
 	AddHandler(Directory_Plugin,               new CSettingTypeSelectedDirectory("Dir:Plugin",Directory_PluginInitial,Directory_PluginSelected,Directory_PluginUseSelected));
-	AddHandler(Directory_PluginInitial,        new CSettingTypeRelativePath("Plugin",""));
+#ifdef _M_IX86
+	AddHandler(Directory_PluginInitial,        new CSettingTypeRelativePath("Plugin", ""));
 	AddHandler(Directory_PluginSelected,       new CSettingTypeApplicationPath("Directory","Plugin",Directory_PluginInitial));
 	AddHandler(Directory_PluginUseSelected,    new CSettingTypeApplication("Directory","Plugin - Use Selected",false));
 	AddHandler(Directory_PluginSync,           new CSettingTypeRelativePath("SyncPlugin",""));
-	
+#else
+	AddHandler(Directory_PluginInitial, new CSettingTypeRelativePath("Plugin64", ""));
+	AddHandler(Directory_PluginSelected, new CSettingTypeApplicationPath("Directory", "Plugin64", Directory_PluginInitial));
+	AddHandler(Directory_PluginUseSelected, new CSettingTypeApplication("Directory", "Plugin - Use Selected", false));
+	AddHandler(Directory_PluginSync, new CSettingTypeRelativePath("SyncPlugin64", ""));
+#endif
+
 	AddHandler(Directory_SnapShot,             new CSettingTypeSelectedDirectory("Dir:Snapshot",Directory_SnapShotInitial,Directory_SnapShotSelected,Directory_SnapShotUseSelected));
 	AddHandler(Directory_SnapShotInitial,      new CSettingTypeRelativePath("Screenshots",""));
 	AddHandler(Directory_SnapShotSelected,     new CSettingTypeApplicationPath("Directory","Snap Shot",Directory_SnapShotInitial));
@@ -283,31 +309,16 @@ void CSettings::AddHowToHandleSetting ()
 	AddHandler(Debugger_AppLogFlush,            new CSettingTypeApplication("Logging","Log Auto Flush",(DWORD)false));
 	AddHandler(Debugger_GenerateLogFiles,       new CSettingTypeApplication("Debugger","Generate Log Files", false));
 
-
-#ifdef BETA_RELEASE
-	AddHandler(Beta_IsBetaVersion,      new CSettingTypeTempBool(true));
-	AddHandler(Beta_UserName,           new CSettingTypeTempString("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"));
-	AddHandler(Beta_EmailAddress,       new CSettingTypeTempString("????????????????????????????????????????????????????????????????????????????????"));
-	AddHandler(Beta_UserNameMD5,        new CSettingTypeTempString("CBBABA8D2262FF1F7A47CEAD87FC4304"));
-	AddHandler(Beta_EmailAddressMD5,    new CSettingTypeTempString("47A3D7CBF1DA291D5EB30DCAAF21B9F8"));
-	AddHandler(Beta_IsValidExe,         new CSettingTypeTempBool(true));
-#endif
-
 	//Plugin
 	AddHandler(Plugin_RSP_Current,   new CSettingTypeApplication("Plugin","RSP Dll",       "RSP\\RSP 1.7.dll"));
 	AddHandler(Plugin_GFX_Current,   new CSettingTypeApplication("Plugin","Graphics Dll",  "GFX\\Jabo_Direct3D8.dll"));
 	AddHandler(Plugin_AUDIO_Current, new CSettingTypeApplication("Plugin","Audio Dll",     "Audio\\Jabo_Dsound.dll"));
-	AddHandler(Plugin_CONT_Current,  new CSettingTypeApplication("Plugin","Controller Dll","Input\\Jabo_DInput.dll"));
+	AddHandler(Plugin_CONT_Current,  new CSettingTypeApplication("Plugin","Controller Dll","Input\\PJ64_NRage.dll"));
 
 	AddHandler(Plugin_RSP_CurVer,    new CSettingTypeApplication("Plugin","RSP Dll Ver",        ""));
 	AddHandler(Plugin_GFX_CurVer,    new CSettingTypeApplication("Plugin","Graphics Dll Ver",   ""));
 	AddHandler(Plugin_AUDIO_CurVer,  new CSettingTypeApplication("Plugin","Audio Dll Ver",      ""));
 	AddHandler(Plugin_CONT_CurVer,   new CSettingTypeApplication("Plugin","Controller Dll Ver", ""));
-
-	AddHandler(Plugin_RSP_Changed,   new CSettingTypeTempBool(true));
-	AddHandler(Plugin_GFX_Changed,   new CSettingTypeTempBool(true));
-	AddHandler(Plugin_AUDIO_Changed, new CSettingTypeTempBool(true));
-	AddHandler(Plugin_CONT_Changed,  new CSettingTypeTempBool(true));
 
 	AddHandler(Plugin_UseHleGfx,     new CSettingTypeApplication("RSP","HLE GFX",true));
 	AddHandler(Plugin_UseHleAudio,   new CSettingTypeApplication("RSP","HLE Audio",false));
@@ -398,7 +409,7 @@ void CSettings::RegisterSetting ( CSettings * _this, SettingID ID, SettingID Def
 	case SettingType_ConstValue:
 		if (DataType != Data_DWORD) 
 		{
-			g_Notify->BreakPoint(__FILE__,__LINE__); 
+			g_Notify->BreakPoint(__FILEW__,__LINE__); 
 			return;
 		}
 		_this->AddHandler(ID,new CSettingTypeTempNumber(Value));
@@ -406,7 +417,7 @@ void CSettings::RegisterSetting ( CSettings * _this, SettingID ID, SettingID Def
 	case SettingType_ConstString:
 		if (DataType != Data_String) 
 		{
-			g_Notify->BreakPoint(__FILE__,__LINE__); 
+			g_Notify->BreakPoint(__FILEW__,__LINE__); 
 			return;
 		}
 		_this->AddHandler(ID,new CSettingTypeTempString(DefaultStr));
@@ -432,7 +443,7 @@ void CSettings::RegisterSetting ( CSettings * _this, SettingID ID, SettingID Def
 			}
 			break;
 		default:
-			g_Notify->BreakPoint(__FILE__,__LINE__); 
+			g_Notify->BreakPoint(__FILEW__,__LINE__); 
 		}
 		break;
 	case SettingType_GameSetting:
@@ -460,7 +471,7 @@ void CSettings::RegisterSetting ( CSettings * _this, SettingID ID, SettingID Def
 				}
 				break;
 			default:
-				g_Notify->BreakPoint(__FILE__,__LINE__); 
+				g_Notify->BreakPoint(__FILEW__,__LINE__); 
 			}
 		}
 		break;
@@ -484,7 +495,7 @@ void CSettings::RegisterSetting ( CSettings * _this, SettingID ID, SettingID Def
 			}
 			break;
 		default:
-			g_Notify->BreakPoint(__FILE__,__LINE__); 
+			g_Notify->BreakPoint(__FILEW__,__LINE__); 
 		}
 		break;
 	case SettingType_RdbSetting:
@@ -502,21 +513,21 @@ void CSettings::RegisterSetting ( CSettings * _this, SettingID ID, SettingID Def
 			}
 			break;
 		default:
-			g_Notify->BreakPoint(__FILE__,__LINE__); 
+			g_Notify->BreakPoint(__FILEW__,__LINE__); 
 		}
 		break;
 	default:
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	}
 }
 
-bool CSettings::Initilize( const char * AppName )
+bool CSettings::Initialize( const char * AppName )
 {
 	AddHowToHandleSetting();
-	CSettingTypeApplication::Initilize(AppName);
-	CSettingTypeRomDatabase::Initilize();
-	CSettingTypeGame::Initilize();
-	CSettingTypeCheats::Initilize();
+	CSettingTypeApplication::Initialize(AppName);
+	CSettingTypeRomDatabase::Initialize();
+	CSettingTypeGame::Initialize();
+	CSettingTypeCheats::Initialize();
 
 	g_Settings->SaveString(Setting_ApplicationName,AppName);
 	return true;
@@ -540,7 +551,7 @@ bool CSettings::LoadBool ( SettingID Type, bool & Value )
 	}
 	if (FindInfo->second->IndexBasedSetting())
 	{
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	} else {
 		return FindInfo->second->Load(0,Value);
 	}
@@ -567,7 +578,7 @@ bool CSettings::LoadBoolIndex( SettingID Type, int index , bool & Value )
 	{
 		return FindInfo->second->Load(index,Value);
 	} else {
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	}
 	return false;
 }
@@ -590,7 +601,7 @@ bool CSettings::LoadDword ( SettingID Type, DWORD & Value)
 	}
 	if (FindInfo->second->IndexBasedSetting())
 	{
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	} else {
 		return FindInfo->second->Load(0,Value);
 	}
@@ -617,7 +628,7 @@ bool CSettings::LoadDwordIndex( SettingID Type, int index, DWORD & Value)
 	{
 		return FindInfo->second->Load(index,Value);
 	} else {
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	}
 	return false;
 }
@@ -640,7 +651,7 @@ bool CSettings::LoadString ( SettingID Type, stdstr & Value )
 	}
 	if (FindInfo->second->IndexBasedSetting())
 	{
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	} else {
 		return FindInfo->second->Load(0,Value);
 	}
@@ -659,7 +670,7 @@ bool CSettings::LoadString ( SettingID Type, char * Buffer, int BufferSize )
 	bool bRes = false;
 	if (FindInfo->second->IndexBasedSetting())
 	{
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	} else {
 		stdstr Value;
 		bRes = FindInfo->second->Load(0,Value);
@@ -693,14 +704,14 @@ bool CSettings::LoadStringIndex ( SettingID Type, int index, stdstr & Value )
 	{
 		return FindInfo->second->Load(index,Value);
 	} else {
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	}
 	return false;
 }
 
 bool CSettings::LoadStringIndex ( SettingID /*Type*/, int /*index*/, char * /*Buffer*/, int /*BufferSize*/ )
 {
-	g_Notify->BreakPoint(__FILE__,__LINE__); 
+	g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	return false;
 }
 
@@ -722,7 +733,7 @@ void CSettings::LoadDefaultBool ( SettingID Type, bool & Value )
 	} else {
 		if (FindInfo->second->IndexBasedSetting())
 		{
-			g_Notify->BreakPoint(__FILE__,__LINE__); 
+			g_Notify->BreakPoint(__FILEW__,__LINE__); 
 		} else {
 			FindInfo->second->LoadDefault(0,Value);
 		}
@@ -731,13 +742,13 @@ void CSettings::LoadDefaultBool ( SettingID Type, bool & Value )
 
 bool CSettings::LoadDefaultBoolIndex ( SettingID /*Type*/, int /*index*/  )
 {
-	g_Notify->BreakPoint(__FILE__,__LINE__); 
+	g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	return false;
 }
 
 void CSettings::LoadDefaultBoolIndex ( SettingID /*Type*/, int /*index*/, bool & /*Value*/ )
 {
-	g_Notify->BreakPoint(__FILE__,__LINE__); 
+	g_Notify->BreakPoint(__FILEW__,__LINE__); 
 }
 
 DWORD  CSettings::LoadDefaultDword ( SettingID Type )
@@ -757,7 +768,7 @@ void CSettings::LoadDefaultDword ( SettingID Type, DWORD & Value)
 	} else {
 		if (FindInfo->second->IndexBasedSetting())
 		{
-			g_Notify->BreakPoint(__FILE__,__LINE__); 
+			g_Notify->BreakPoint(__FILEW__,__LINE__); 
 		} else {
 			FindInfo->second->LoadDefault(0,Value);
 		}
@@ -766,13 +777,13 @@ void CSettings::LoadDefaultDword ( SettingID Type, DWORD & Value)
 
 DWORD  CSettings::LoadDefaultDwordIndex ( SettingID /*Type*/, int /*index*/ )
 {
-	g_Notify->BreakPoint(__FILE__,__LINE__); 
+	g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	return false;
 }
 
 void CSettings::LoadDefaultDwordIndex ( SettingID /*Type*/, int /*index*/, DWORD & /*Value*/)
 {
-	g_Notify->BreakPoint(__FILE__,__LINE__); 
+	g_Notify->BreakPoint(__FILEW__,__LINE__); 
 }
 
 stdstr CSettings::LoadDefaultString ( SettingID Type )
@@ -792,7 +803,7 @@ void CSettings::LoadDefaultString ( SettingID Type, stdstr & Value )
 	} else {
 		if (FindInfo->second->IndexBasedSetting())
 		{
-			g_Notify->BreakPoint(__FILE__,__LINE__); 
+			g_Notify->BreakPoint(__FILEW__,__LINE__); 
 		} else {
 			FindInfo->second->LoadDefault(0,Value);
 		}
@@ -801,23 +812,23 @@ void CSettings::LoadDefaultString ( SettingID Type, stdstr & Value )
 
 void CSettings::LoadDefaultString ( SettingID /*Type*/, char * /*Buffer*/, int /*BufferSize*/ )
 {
-	g_Notify->BreakPoint(__FILE__,__LINE__); 
+	g_Notify->BreakPoint(__FILEW__,__LINE__); 
 }
 
 stdstr CSettings::LoadDefaultStringIndex ( SettingID /*Type*/, int /*index*/ )
 {
-	g_Notify->BreakPoint(__FILE__,__LINE__); 
+	g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	return false;
 }
 
 void CSettings::LoadDefaultStringIndex ( SettingID /*Type*/, int /*index*/, stdstr & /*Value*/ )
 {
-	g_Notify->BreakPoint(__FILE__,__LINE__); 
+	g_Notify->BreakPoint(__FILEW__,__LINE__); 
 }
 
 void CSettings::LoadDefaultStringIndex ( SettingID /*Type*/, int /*index*/, char * /*Buffer*/, int /*BufferSize*/ )
 {
-	g_Notify->BreakPoint(__FILE__,__LINE__); 
+	g_Notify->BreakPoint(__FILEW__,__LINE__); 
 }
 
 void CSettings::SaveBool ( SettingID Type, bool Value )
@@ -831,7 +842,7 @@ void CSettings::SaveBool ( SettingID Type, bool Value )
 	}
 	if (FindInfo->second->IndexBasedSetting())
 	{
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	} else {
 		FindInfo->second->Save(0,Value);
 	}
@@ -851,7 +862,7 @@ void CSettings::SaveBoolIndex( SettingID Type, int index, bool Value )
 	{
 		FindInfo->second->Save(index,Value);
 	} else {
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	}
 	NotifyCallBacks(Type);
 }
@@ -867,7 +878,7 @@ void CSettings::SaveDword ( SettingID Type, DWORD Value )
 	}
 	if (FindInfo->second->IndexBasedSetting())
 	{
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	} else {
 		FindInfo->second->Save(0,Value);
 	}
@@ -887,7 +898,7 @@ void CSettings::SaveDwordIndex ( SettingID Type, int index, DWORD Value )
 	{
 		FindInfo->second->Save(index,Value);
 	} else {
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	}
 	NotifyCallBacks(Type);
 }
@@ -903,7 +914,7 @@ void CSettings::SaveString ( SettingID Type, const stdstr & Value )
 	}
 	if (FindInfo->second->IndexBasedSetting())
 	{
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	} else {
 		FindInfo->second->Save(0,Value);
 	}
@@ -920,7 +931,7 @@ void CSettings::SaveString ( SettingID Type, const char * Buffer )
 	}
 	if (FindInfo->second->IndexBasedSetting())
 	{
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	} else {
 		FindInfo->second->Save(0,Buffer);
 	}
@@ -939,7 +950,7 @@ void CSettings::SaveStringIndex( SettingID Type, int index, const char * Buffer 
 	{
 		FindInfo->second->Save(index,Buffer);
 	} else {
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	}
 	NotifyCallBacks(Type);
 }
@@ -959,7 +970,7 @@ void CSettings::DeleteSetting( SettingID Type )
 	}
 	if (FindInfo->second->IndexBasedSetting())
 	{
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	} else {
 		FindInfo->second->Delete(0);
 	}
@@ -978,7 +989,7 @@ void CSettings::DeleteSettingIndex( SettingID Type, int index  )
 	{
 		FindInfo->second->Delete(index);
 	} else {
-		g_Notify->BreakPoint(__FILE__,__LINE__); 
+		g_Notify->BreakPoint(__FILEW__,__LINE__); 
 	}
 	NotifyCallBacks(Type);
 }
@@ -1023,7 +1034,7 @@ void CSettings::SettingTypeChanged( SettingType Type )
 void CSettings::UnknownSetting (SettingID /*Type*/)
 {
 #ifdef _DEBUG
-	g_Notify->BreakPoint(__FILE__,__LINE__); 
+	g_Notify->BreakPoint(__FILEW__,__LINE__); 
 #endif
 }
 
@@ -1084,7 +1095,7 @@ void CSettings::UnregisterChangeCB(SettingID Type,void * Data, SettingChangedFun
 					if (item->Next)
 					{
 						SettingID Type = Callback->first;
-						_SETTING_CHANGED_CB * Next = item->Next;
+						SETTING_CHANGED_CB * Next = item->Next;
 						m_Callback.erase(Callback);
 						m_Callback.insert(SETTING_CALLBACK::value_type(Type,Next));
 					} else {
@@ -1107,6 +1118,6 @@ void CSettings::UnregisterChangeCB(SettingID Type,void * Data, SettingChangedFun
 
 	if (!bRemoved)
 	{
-		g_Notify->BreakPoint(__FILE__,__LINE__);
+		g_Notify->BreakPoint(__FILEW__,__LINE__);
 	}
 }

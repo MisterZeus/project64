@@ -25,7 +25,6 @@
 #define _SETTINGS_H_
 
 #define DIRECTINPUT_VERSION 0x0800
-#define VERSIONNUMBER		"2.3c"
 
 	// hacks for GNU C compilers
 #ifdef __GNUC__
@@ -48,11 +47,6 @@ typedef const unsigned char *const unsigned char *;
 	// Our default buffer size for TCHAR arrays (resources get loaded through here)
 	// MAKE SURE localized resources do not exceed this limit, or they will be cut off.
 #define DEFAULT_BUFFER		256
-
-	// conform to Plugin Specs 1.0
-#define SPECS_VERSION 0x0100
-	// conform to Plugin Specs 1.1
-// #define SPECS_VERSION 0x0101
 
 	// use default settings for Release and Debugbuild
 #define STDCONFIG

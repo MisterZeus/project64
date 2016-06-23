@@ -146,15 +146,7 @@
 				>
 			</File>
 			<File
-				RelativePath="osversion.cpp"
-				>
-			</File>
-			<File
 				RelativePath="path.cpp"
-				>
-			</File>
-			<File
-				RelativePath="registry.cpp"
 				>
 			</File>
 			<File
@@ -183,10 +175,6 @@
 			</File>
 			<File
 				RelativePath="Trace.cpp"
-				>
-			</File>
-			<File
-				RelativePath="Version.cpp"
 				>
 			</File>
 		</Filter>
@@ -219,15 +207,7 @@
 				>
 			</File>
 			<File
-				RelativePath="osversion.h"
-				>
-			</File>
-			<File
 				RelativePath="path.h"
-				>
-			</File>
-			<File
-				RelativePath="registry.h"
 				>
 			</File>
 			<File
@@ -248,10 +228,6 @@
 			</File>
 			<File
 				RelativePath="TraceDefs.h"
-				>
-			</File>
-			<File
-				RelativePath="Version.h"
 				>
 			</File>
 		</Filter>

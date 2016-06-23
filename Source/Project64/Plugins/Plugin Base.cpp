@@ -11,18 +11,18 @@
 #include "stdafx.h"
 
 CPlugin::CPlugin() :
-	m_hDll(NULL),
-	m_Initilized(false),
-	m_RomOpen(false),
-	RomOpen(NULL),
-	RomClosed(NULL),
-	CloseDLL(NULL),
-	PluginOpened(NULL),
 	DllAbout(NULL),
 	DllConfig(NULL),
+	CloseDLL(NULL),
+	RomOpen(NULL),
+	RomClosed(NULL),
+	PluginOpened(NULL),
 	SetSettingInfo(NULL),
 	SetSettingInfo2(NULL),
-	SetSettingInfo3(NULL)
+	SetSettingInfo3(NULL),
+	m_hDll(NULL),
+	m_Initialized(false),
+	m_RomOpen(false)
 {
 	memset(&m_PluginInfo, 0, sizeof(m_PluginInfo));
 }
@@ -42,10 +42,17 @@ bool CPlugin::Load (const char * FileName)
 
 	// Try to load the plugin DLL
 	//Try to load the DLL library
-	UINT LastErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-	m_hDll = LoadLibrary(FileName);
-	SetErrorMode(LastErrorMode);
-	
+	if (bHaveDebugger())
+	{
+		m_hDll = LoadLibrary(FileName);
+	}
+	else
+	{
+		UINT LastErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+		m_hDll = LoadLibrary(FileName);
+		SetErrorMode(LastErrorMode);
+	}
+
 	if (m_hDll == NULL) 
 	{ 
 		return false;
@@ -111,20 +118,27 @@ bool CPlugin::Load (const char * FileName)
 	{
 		return false;
 	}
+	WriteTraceF(PluginTraceType(),__FUNCTION__ "(%s): Functions loaded",PluginType());
 
 	if (PluginOpened)
 	{
+		WriteTraceF(PluginTraceType(),__FUNCTION__ "(%s): Before Plugin Opened",PluginType());
 		PluginOpened();
+		WriteTraceF(PluginTraceType(),__FUNCTION__ "(%s): After Plugin Opened",PluginType());
 	}
 	return true;
 }
 
 void CPlugin::RomOpened()
 {
-	if (m_RomOpen || RomOpen == NULL)
+	if (m_RomOpen)
 		return;
 
-	RomOpen();
+	if(RomOpen != NULL){
+		WriteTraceF(PluginTraceType(),__FUNCTION__ "(%s): Before Rom Open",PluginType());
+		RomOpen();
+		WriteTraceF(PluginTraceType(),__FUNCTION__ "(%s): After Rom Open",PluginType());
+	}
 	m_RomOpen = true;
 }
 
@@ -133,15 +147,17 @@ void CPlugin::RomClose()
 	if (!m_RomOpen)
 		return;
 
+	WriteTraceF(PluginTraceType(),__FUNCTION__ "(%s): Before Rom Close",PluginType());
 	RomClosed();
 	m_RomOpen = false;
+	WriteTraceF(PluginTraceType(),__FUNCTION__ "(%s): After Rom Close",PluginType());
 }
 
 void CPlugin::GameReset()
 {
 	if (m_RomOpen) 
 	{
-		RomClosed();
+		RomClose();
 		if (RomOpen)
 		{
 			RomOpen();
@@ -151,19 +167,19 @@ void CPlugin::GameReset()
 
 void CPlugin::Close()
 {
-	if (m_RomOpen) {
-		RomClosed();
-		m_RomOpen = false;
-	}
-	if (m_Initilized)
+	WriteTraceF(PluginTraceType(),__FUNCTION__ "(%s): Start",PluginType());
+	RomClose();
+	if (m_Initialized)
 	{
 		CloseDLL();
-		m_Initilized = false;
+		m_Initialized = false;
 	}
+	WriteTraceF(PluginTraceType(),__FUNCTION__ "(%s): Done",PluginType());
 }
 
 void CPlugin::UnloadPlugin()
 {
+	WriteTraceF(PluginTraceType(),__FUNCTION__ "(%s): unloading",PluginType());
 	memset(&m_PluginInfo, 0, sizeof(m_PluginInfo));
 	if (m_hDll != NULL)
 	{
@@ -181,4 +197,28 @@ void CPlugin::UnloadPlugin()
 	SetSettingInfo = NULL;
 	SetSettingInfo2 = NULL;
 	SetSettingInfo3 = NULL;
+}
+
+const char * CPlugin::PluginType () const
+{
+	switch (m_PluginInfo.Type)
+	{
+	case PLUGIN_TYPE_RSP: return "RSP";
+	case PLUGIN_TYPE_GFX: return "GFX";
+	case PLUGIN_TYPE_AUDIO: return "Audio";
+	case PLUGIN_TYPE_CONTROLLER: return "Control";
+	}
+	return "Unknown";
+}
+
+TraceType CPlugin::PluginTraceType () const
+{
+	switch (m_PluginInfo.Type)
+	{
+	case PLUGIN_TYPE_RSP: return TraceRSP;
+	case PLUGIN_TYPE_GFX: return TraceGfxPlugin;
+	case PLUGIN_TYPE_AUDIO: return TraceDebug;
+	case PLUGIN_TYPE_CONTROLLER: return TraceDebug;
+	}
+	return TraceDebug;
 }

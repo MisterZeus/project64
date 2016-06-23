@@ -1,4 +1,6 @@
 #include "stdafx.h"
+
+#ifdef WINDOWS_UI
 #include "Settings Config.h"
 #include "Settings/Settings Page.h"
 #include "Settings/SettingType/SettingsType-Application.h"
@@ -22,7 +24,25 @@ CSettingConfig::~CSettingConfig ()
 
 void CSettingConfig::Display(void * ParentWindow)
 {
-	DoModal((HWND)ParentWindow);
+	if (g_BaseSystem)
+	{
+		g_BaseSystem->ExternalEvent(SysEvent_PauseCPU_Settings); 
+	}
+
+	BOOL result = m_thunk.Init(NULL, NULL);
+	if (result)
+	{
+		_AtlWinModule.AddCreateWndData(&m_thunk.cd, this);
+#ifdef _DEBUG
+		m_bModal = true;
+#endif //_DEBUG
+		::DialogBoxParamW(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCEW(IDD), (HWND)ParentWindow, StartDialogProc, NULL);
+	}
+ 
+	if (g_BaseSystem)
+	{
+		g_BaseSystem->ExternalEvent(SysEvent_ResumeCPU_Settings); 
+	}
 }
 
 void CSettingConfig::UpdateAdvanced ( bool AdvancedMode )
@@ -43,7 +63,7 @@ bool CSettingConfig::UpdateAdvanced ( bool AdvancedMode, HTREEITEM hItem )
 		}
 		if (AdvancedMode && Page == m_GeneralOptionsPage)
 		{
-			m_PagesTreeList.InsertItem(TVIF_TEXT | TVIF_PARAM,GS(m_AdvancedPage->PageTitle()),0,0,0,0,(ULONG)m_AdvancedPage,hItem,TVI_FIRST);
+			m_PagesTreeList.InsertItemW(TVIF_TEXT | TVIF_PARAM,GS(m_AdvancedPage->PageTitle()),0,0,0,0,(ULONG)m_AdvancedPage,hItem,TVI_FIRST);
 			return true;
 		}
 		if (UpdateAdvanced(AdvancedMode,m_PagesTreeList.GetChildItem(hItem)))
@@ -70,20 +90,31 @@ LRESULT	CSettingConfig::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*
 
 	CConfigSettingSection * SettingsSection;
 
+	//Set the text for all gui Items
+	SetDlgItemTextW(m_hWnd, IDC_RESET_PAGE, GS(BOTTOM_RESET_PAGE));
+	SetDlgItemTextW(m_hWnd, IDC_RESET_ALL, GS(BOTTOM_RESET_ALL));
+	SetDlgItemTextW(m_hWnd, IDOK, GS(CHEAT_OK));
+	SetDlgItemTextW(m_hWnd, IDCANCEL, GS(CHEAT_CANCEL));
+	SetDlgItemTextW(m_hWnd, IDAPPLY, GS(BOTTOM_APPLY));
+
 	if (m_GameConfig)
 	{
 		if (g_Settings->LoadBool(Setting_RdbEditor))
 		{
 			SetWindowText(stdstr_f("%s ** RDB Edit Mode **",ConfigRomTitle.c_str()).c_str());
-		} else {
+		} 
+		else 
+		{
 			SetWindowText(ConfigRomTitle.c_str());
 		}		
-	} else {
+	}
+	else 
+	{
 		if (g_Settings->LoadBool(Setting_RdbEditor))
 		{
 			SetWindowText(stdstr_f("%s ** RDB Edit Mode **",GS(OPTIONS_TITLE)).c_str());
 		} else {
-			SetWindowText(GS(OPTIONS_TITLE));
+			::SetWindowTextW(m_hWnd, GS(OPTIONS_TITLE));
 		}
 
 		if (g_Settings->LoadBool(Setting_PluginPageFirst))
@@ -121,7 +152,7 @@ LRESULT	CSettingConfig::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*
 	//Game Settings
 	if (!GameIni.empty())
 	{
-		CConfigSettingSection * GameSettings = new CConfigSettingSection(ConfigRomTitle.c_str());
+        CConfigSettingSection * GameSettings = new CConfigSettingSection(ConfigRomTitle.ToUTF16().c_str());
 		GameSettings->AddPage(new CGameGeneralPage(this->m_hWnd,rcSettingInfo ));
 		GameSettings->AddPage(new CGameRecompilePage(this->m_hWnd,rcSettingInfo ));
 		GameSettings->AddPage(new CGamePluginPage(this->m_hWnd,rcSettingInfo ));
@@ -143,7 +174,7 @@ LRESULT	CSettingConfig::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*
 		
 		HTREEITEM hSectionItem = NULL;	
 
-		for (int i = 0; i < Section->GetPageCount(); i++ )
+		for (size_t i = 0; i < Section->GetPageCount(); i++)
 		{
 			CSettingsPage * Page = Section->GetPage(i);
 			if (HideAdvanced && Page == m_AdvancedPage)
@@ -152,14 +183,14 @@ LRESULT	CSettingConfig::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*
 			}
 			if (i == 0)
 			{
-				hSectionItem = m_PagesTreeList.InsertItem(TVIF_TEXT | TVIF_PARAM,Section->GetPageTitle(),0,0,0,0,(ULONG)Page,TVI_ROOT,TVI_LAST);
+				hSectionItem = m_PagesTreeList.InsertItemW(TVIF_TEXT | TVIF_PARAM,Section->GetPageTitle(),0,0,0,0,(ULONG)Page,TVI_ROOT,TVI_LAST);
 				continue;
 			}
 			if (hSectionItem == NULL)
 			{
 				continue;
 			}
-			m_PagesTreeList.InsertItem(TVIF_TEXT | TVIF_PARAM,GS(Page->PageTitle()),0,0,0,0,(ULONG)Page,hSectionItem,TVI_LAST);
+			m_PagesTreeList.InsertItemW(TVIF_TEXT | TVIF_PARAM,GS(Page->PageTitle()),0,0,0,0,(ULONG)Page,hSectionItem,TVI_LAST);
 		}
 		if (bFirstItem && hSectionItem != NULL)
 		{
@@ -198,7 +229,7 @@ LRESULT CSettingConfig::OnClicked (WORD /*wNotifyCode*/, WORD wID, HWND , BOOL& 
 		{
 			CConfigSettingSection * Section = *iter;
 			
-			for (int i = 0; i < Section->GetPageCount(); i++ )
+			for (size_t i = 0; i < Section->GetPageCount(); i++ )
 			{
 				CSettingsPage * Page = Section->GetPage(i);
 				if (Page->EnableReset())
@@ -230,7 +261,7 @@ void CSettingConfig::ApplySettings( bool UpdateScreen )
 	{
 		CConfigSettingSection * Section = *iter;
 		
-		for (int i = 0; i < Section->GetPageCount(); i++ )
+		for (size_t i = 0; i < Section->GetPageCount(); i++ )
 		{
 			CSettingsPage * Page = Section->GetPage(i);
 			Page->ApplySettings(UpdateScreen);
@@ -310,4 +341,4 @@ void CSettingConfig::BoldChangedPages ( HTREEITEM hItem )
 		::EnableWindow(GetDlgItem(IDC_RESET_ALL), true);
 	}
 }
-
+#endif

@@ -10,13 +10,14 @@
 ****************************************************************************/
 #pragma once
 
-class CPlugin
+class CPlugin :
+	private CDebugSettings
 {
 public:
 	CPlugin();
 	virtual ~CPlugin();
-	inline stdstr PluginName() const { return m_PluginInfo.Name; }
-	inline bool Initilized() { return m_Initilized; }
+	inline const char * PluginName() const { return m_PluginInfo.Name; }
+	inline bool Initialized() { return m_Initialized; }
 
 	virtual int GetDefaultSettingStartRange() const = 0;
 	virtual int GetSettingStartRange() const = 0;
@@ -34,6 +35,8 @@ public:
 protected:
 
 	void UnloadPlugin();
+	const char * PluginType () const;
+	TraceType PluginTraceType () const;
 	virtual void UnloadPluginDetails() = 0;
 	virtual PLUGIN_TYPE type() = 0;
 	virtual bool LoadFunctions ( void ) = 0;
@@ -47,7 +50,7 @@ protected:
 	void(__cdecl *SetSettingInfo3)	(PLUGIN_SETTINGS3 *);
 
 	void * m_hDll;
-	bool   m_Initilized, m_RomOpen;
+	bool   m_Initialized, m_RomOpen;
 	PLUGIN_INFO m_PluginInfo;
 
 	// Loads a function pointer from the currently loaded DLL

@@ -9,6 +9,8 @@
 *                                                                           *
 ****************************************************************************/
 #include "stdafx.h"
+
+#ifdef WINDOWS_UI
 #include "Debugger UI.h"
 
 CDumpMemory::CDumpMemory(CDebugger * debugger) :
@@ -89,7 +91,7 @@ LRESULT	CDumpMemory::OnClicked(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 			GetDlgItemText(IDC_FILENAME,FileName,sizeof(FileName));
 			if (strlen(FileName) == 0) 
 			{
-				g_Notify->DisplayError("Please Choose target file");
+				g_Notify->DisplayError(L"Please Choose target file");
 				::SetFocus(GetDlgItem(IDC_FILENAME));
 				return false;
 			}
@@ -140,13 +142,19 @@ LRESULT	CDumpMemory::OnClicked(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 //	DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_Cheats_DumpMemory), 
 //			(HWND)hParent, (DLGPROC)WinProc,(LPARAM)this);
 //}
-//DWORD CDumpMemory::AsciiToHex (const char * HexValue) {
+//DWORD CDumpMemory::AsciiToHex (const char * HexValue)
+//{
 //	DWORD Count, Finish, Value = 0;
 //	Finish = strlen(HexValue);
-//	if (Finish > 8 ) { Finish = 8; }
-//	for (Count = 0; Count < Finish; Count++){
+//	if (Finish > 8 )
+//	{
+//		Finish = 8;
+//	}
+//	for (Count = 0; Count < Finish; Count++
+//	{
 //		Value = (Value << 4);
-//		switch( HexValue[Count] ) {
+//		switch ( HexValue[Count] )
+//		{
 //		case '0': break;
 //		case '1': Value += 1; break;
 //		case '2': Value += 2; break;
@@ -178,16 +186,17 @@ LRESULT	CDumpMemory::OnClicked(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 //}
 //int CALLBACK CDumpMemory::WinProc (HWND hDlg,DWORD uMsg,DWORD wParam, DWORD lParam) 
 //{
-//	switch (uMsg) {
+//	switch (uMsg)
+//	{
 //	case WM_INITDIALOG:
 //		{
 //			CDumpMemory * _this = (CDumpMemory *)lParam;
-//			SetProp((HWND)hDlg,"Class",_this);
+//			SetProp(hDlg,"Class",_this);
 //			_this->m_Window = hDlg;
-//			SetDlgItemText((HWND)hDlg,IDC_E_START_ADDR,stdstr("0x%X",m_StartAddress).c_str());
-//			SetDlgItemText((HWND)hDlg,IDC_E_END_ADDR,stdstr("0x%X",m_EndAddress).c_str());
-//			SetDlgItemText((HWND)hDlg,IDC_E_ALT_PC,"0x80000000");
-//			HWND hFormatList = GetDlgItem((HWND)hDlg,IDC_FORMAT);
+//			SetDlgItemText(hDlg,IDC_E_START_ADDR,stdstr("0x%X",m_StartAddress).c_str());
+//			SetDlgItemText(hDlg,IDC_E_END_ADDR,stdstr("0x%X",m_EndAddress).c_str());
+//			SetDlgItemText(hDlg,IDC_E_ALT_PC,"0x80000000");
+//			HWND hFormatList = GetDlgItem(hDlg,IDC_FORMAT);
 //			int pos = SendMessage(hFormatList,CB_ADDSTRING,(WPARAM)0,(LPARAM)"TEXT - Disassembly + PC");
 //			SendMessage(hFormatList,CB_SETITEMDATA,(WPARAM)pos,(LPARAM)DisassemblyWithPC);
 //			SendMessage(hFormatList,CB_SETCURSEL,(WPARAM)0,(LPARAM)0);
@@ -199,36 +208,52 @@ LRESULT	CDumpMemory::OnClicked(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 //		case IDC_E_START_ADDR:
 //		case IDC_E_END_ADDR:
 //		case IDC_E_ALT_PC:
-//			if (HIWORD(wParam) == EN_UPDATE) {
-//				CDumpMemory * _this = (CDumpMemory *)GetProp((HWND)hDlg,"Class");
+//			if (HIWORD(wParam) == EN_UPDATE)
+//			{
+//				CDumpMemory * _this = (CDumpMemory *)GetProp(hDlg,"Class");
 //				TCHAR szTmp[20], szTmp2[20];
 //				DWORD Value;
-//				GetDlgItemText((HWND)hDlg,LOWORD(wParam),szTmp,sizeof(szTmp));
+//				GetDlgItemText(hDlg,LOWORD(wParam),szTmp,sizeof(szTmp));
 //				Value = szTmp[1] =='x'?AsciiToHex(&szTmp[2]):AsciiToHex(szTmp);
-//				//if (Value > Stop)  { Value = Stop; }
-//				//if (Value < Start) { Value = Start; }
+//				//if (Value > Stop)
+//				//{
+//				//	Value = Stop;
+//				//}
+//				//if (Value < Start)
+//				//{
+//				//	Value = Start;
+//				//}
 //				sprintf(szTmp2,"0x%X",Value);
-//				if (strcmp(szTmp,szTmp2) != 0) {
-//					SetDlgItemText((HWND)hDlg,LOWORD(wParam),szTmp2);
-//					if (_this->SelStop == 0) { _this->SelStop = strlen(szTmp2); _this->SelStart = _this->SelStop; }
-//					SendDlgItemMessage((HWND)hDlg,LOWORD(wParam),EM_SETSEL,(WPARAM)_this->SelStart,(LPARAM)_this->SelStop);
-//				} else {
+//				if (strcmp(szTmp,szTmp2) != 0)
+//				{
+//					SetDlgItemText(hDlg,LOWORD(wParam),szTmp2);
+//					if (_this->SelStop == 0)
+//					{
+//						_this->SelStop = strlen(szTmp2); _this->SelStart = _this->SelStop;
+//					}
+//					SendDlgItemMessage(hDlg,LOWORD(wParam),EM_SETSEL,(WPARAM)_this->SelStart,(LPARAM)_this->SelStop);
+//				}
+//				else
+//				{
 //					WORD NewSelStart, NewSelStop;
-//					SendDlgItemMessage((HWND)hDlg,LOWORD(wParam),EM_GETSEL,(WPARAM)&NewSelStart,(LPARAM)&NewSelStop);
-//					if (NewSelStart != 0) { _this->SelStart = NewSelStart; _this->SelStop = NewSelStop; }
+//					SendDlgItemMessage(hDlg,LOWORD(wParam),EM_GETSEL,(WPARAM)&NewSelStart,(LPARAM)&NewSelStop);
+//					if (NewSelStart != 0)
+//					{
+//						_this->SelStart = NewSelStart; _this->SelStop = NewSelStop;
+//					}
 //				}
 //			}
 //			break;
 //		case IDC_BTN_CHOOSE_FILE:
 //			{
-//				CDumpMemory * _this = (CDumpMemory *)GetProp((HWND)hDlg,"Class");
+//				CDumpMemory * _this = (CDumpMemory *)GetProp(hDlg,"Class");
 //				OPENFILENAME openfilename;
 //				char FileName[_MAX_PATH],Directory[_MAX_PATH];
 //				memset(&FileName, 0, sizeof(FileName));
 //				memset(&openfilename, 0, sizeof(openfilename));
 //				strcpy(Directory,g_Settings->LoadString(ApplicationDir).c_str());
 //				openfilename.lStructSize  = sizeof( openfilename );
-//				openfilename.hwndOwner    = (HWND)hDlg;
+//				openfilename.hwndOwner    = hDlg;
 //				openfilename.lpstrFilter  = "Text file (*.txt)\0*.txt;\0All files (*.*)\0*.*\0";
 //				openfilename.lpstrFile    = FileName;
 //				openfilename.lpstrInitialDir    = Directory;
@@ -242,55 +267,55 @@ LRESULT	CDumpMemory::OnClicked(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 //					{
 //                        strcat(FileName,".txt");
 //					}
-//					SetDlgItemText((HWND)hDlg,IDC_FILENAME,FileName);
+//					SetDlgItemText(hDlg,IDC_FILENAME,FileName);
 //				}	
 //			}
 //			break;
 //		case IDCANCEL:
-//			RemoveProp((HWND)hDlg,"Class");
-//			EndDialog((HWND)hDlg,0);
+//			RemoveProp(hDlg,"Class");
+//			EndDialog(hDlg,0);
 //			break;
 //		case IDOK:
 //			{
-//				CDumpMemory * _this = (CDumpMemory *)GetProp((HWND)hDlg,"Class");
+//				CDumpMemory * _this = (CDumpMemory *)GetProp(hDlg,"Class");
 //				TCHAR szTmp[20], FileName[MAX_PATH];
-//				int CurrentFormatSel = SendDlgItemMessage((HWND)hDlg,IDC_FORMAT,CB_GETCURSEL,0,0);
-//				DumpFormat Format = (DumpFormat)SendDlgItemMessage((HWND)hDlg,IDC_FORMAT,CB_GETITEMDATA,CurrentFormatSel,0);
-//				GetDlgItemText((HWND)hDlg,IDC_E_START_ADDR,szTmp,sizeof(szTmp));
+//				int CurrentFormatSel = SendDlgItemMessage(hDlg,IDC_FORMAT,CB_GETCURSEL,0,0);
+//				DumpFormat Format = (DumpFormat)SendDlgItemMessage(hDlg,IDC_FORMAT,CB_GETITEMDATA,CurrentFormatSel,0);
+//				GetDlgItemText(hDlg,IDC_E_START_ADDR,szTmp,sizeof(szTmp));
 //				DWORD StartPC = szTmp[1] =='x'?AsciiToHex(&szTmp[2]):AsciiToHex(szTmp);
-//				GetDlgItemText((HWND)hDlg,IDC_E_END_ADDR,szTmp,sizeof(szTmp));
+//				GetDlgItemText(hDlg,IDC_E_END_ADDR,szTmp,sizeof(szTmp));
 //				DWORD EndPC = szTmp[1] =='x'?AsciiToHex(&szTmp[2]):AsciiToHex(szTmp);
-//				GetDlgItemText((HWND)hDlg,IDC_E_ALT_PC,szTmp,sizeof(szTmp));
+//				GetDlgItemText(hDlg,IDC_E_ALT_PC,szTmp,sizeof(szTmp));
 //				DWORD DumpPC = szTmp[1] =='x'?AsciiToHex(&szTmp[2]):AsciiToHex(szTmp);
-//				GetDlgItemText((HWND)hDlg,IDC_FILENAME,FileName,sizeof(FileName));
+//				GetDlgItemText(hDlg,IDC_FILENAME,FileName,sizeof(FileName));
 //				if (strlen(FileName) == 0) 
 //				{
-//					g_Notify->DisplayError("Please Choose target file");
-//					SetFocus(GetDlgItem((HWND)hDlg,IDC_FILENAME));
+//					g_Notify->DisplayError(L"Please Choose target file");
+//					SetFocus(GetDlgItem(hDlg,IDC_FILENAME));
 //					return false;
 //				}
-//				if (SendDlgItemMessage((HWND)hDlg,IDC_USE_ALT_PC,BM_GETSTATE, 0,0) != BST_CHECKED)
+//				if (SendDlgItemMessage(hDlg,IDC_USE_ALT_PC,BM_GETSTATE, 0,0) != BST_CHECKED)
 //				{
 //					DumpPC = _this->g_MMU->SystemRegisters()->PROGRAM_COUNTER;
 //				}
 //				//disable buttons
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDC_E_START_ADDR),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDC_E_END_ADDR),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDC_E_ALT_PC),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDC_USE_ALT_PC),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDC_FILENAME),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDC_BTN_CHOOSE_FILE),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDC_FORMAT),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDOK),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDCANCEL),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDC_E_START_ADDR),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDC_E_END_ADDR),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDC_E_ALT_PC),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDC_USE_ALT_PC),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDC_FILENAME),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDC_BTN_CHOOSE_FILE),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDC_FORMAT),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDOK),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDCANCEL),FALSE);
 //				if (!_this->DumpMemory(FileName,Format,StartPC,EndPC,DumpPC))
 //				{
 //					//enable buttons
 //					return false;
 //				}
 //			}
-//			RemoveProp((HWND)hDlg,"Class");
-//			EndDialog((HWND)hDlg,0);
+//			RemoveProp(hDlg,"Class");
+//			EndDialog(hDlg,0);
 //			break;
 //		}
 //		break;
@@ -309,12 +334,12 @@ bool CDumpMemory::DumpMemory ( LPCSTR FileName,DumpFormat Format, DWORD StartPC,
 			CLog LogFile;
 			if (!LogFile.Open(FileName))
 			{
-				g_Notify->DisplayError("Failed to open\n%s",FileName);
+				g_Notify->DisplayError(L"Failed to open\n%s",FileName);
 				return false;
 			}
 			LogFile.SetFlush(false);
 			LogFile.SetTruncateFile(false);
-			g_Notify->BreakPoint(__FILE__,__LINE__);
+			g_Notify->BreakPoint(__FILEW__,__LINE__);
 #ifdef tofix
 			char Command[200];
 			for (COpcode OpCode(StartPC);  OpCode.PC() < EndPC; OpCode.Next())
@@ -348,15 +373,21 @@ bool CDumpMemory::DumpMemory ( LPCSTR FileName,DumpFormat Format, DWORD StartPC,
 //			(HWND)hParent, (DLGPROC)WinProc,(LPARAM)this);
 //}
 //
-//DWORD CDumpMemory::AsciiToHex (const char * HexValue) {
+//DWORD CDumpMemory::AsciiToHex (const char * HexValue)
+//{
 //	DWORD Count, Finish, Value = 0;
 //
 //	Finish = strlen(HexValue);
-//	if (Finish > 8 ) { Finish = 8; }
+//	if (Finish > 8 )
+//	{
+//		Finish = 8;
+//	}
 //
-//	for (Count = 0; Count < Finish; Count++){
+//	for (Count = 0; Count < Finish; Count++)
+//	{
 //		Value = (Value << 4);
-//		switch( HexValue[Count] ) {
+//		switch ( HexValue[Count] )
+//		{
 //		case '0': break;
 //		case '1': Value += 1; break;
 //		case '2': Value += 2; break;
@@ -389,17 +420,18 @@ bool CDumpMemory::DumpMemory ( LPCSTR FileName,DumpFormat Format, DWORD StartPC,
 //
 //int CALLBACK CDumpMemory::WinProc (HWND hDlg,DWORD uMsg,DWORD wParam, DWORD lParam) 
 //{
-//	switch (uMsg) {
+//	switch (uMsg)
+//	{
 //	case WM_INITDIALOG:
 //		{
 //			CDumpMemory * _this = (CDumpMemory *)lParam;
-//			SetProp((HWND)hDlg,"Class",_this);
+//			SetProp(hDlg,"Class",_this);
 //			_this->m_Window = hDlg;
-//			SetDlgItemText((HWND)hDlg,IDC_E_START_ADDR,stdstr("0x%X",m_StartAddress).c_str());
-//			SetDlgItemText((HWND)hDlg,IDC_E_END_ADDR,stdstr("0x%X",m_EndAddress).c_str());
-//			SetDlgItemText((HWND)hDlg,IDC_E_ALT_PC,"0x80000000");
+//			SetDlgItemText(hDlg,IDC_E_START_ADDR,stdstr("0x%X",m_StartAddress).c_str());
+//			SetDlgItemText(hDlg,IDC_E_END_ADDR,stdstr("0x%X",m_EndAddress).c_str());
+//			SetDlgItemText(hDlg,IDC_E_ALT_PC,"0x80000000");
 //
-//			HWND hFormatList = GetDlgItem((HWND)hDlg,IDC_FORMAT);
+//			HWND hFormatList = GetDlgItem(hDlg,IDC_FORMAT);
 //			int pos = SendMessage(hFormatList,CB_ADDSTRING,(WPARAM)0,(LPARAM)"TEXT - Disassembly + PC");
 //			SendMessage(hFormatList,CB_SETITEMDATA,(WPARAM)pos,(LPARAM)DisassemblyWithPC);
 //			SendMessage(hFormatList,CB_SETCURSEL,(WPARAM)0,(LPARAM)0);
@@ -412,31 +444,44 @@ bool CDumpMemory::DumpMemory ( LPCSTR FileName,DumpFormat Format, DWORD StartPC,
 //		case IDC_E_START_ADDR:
 //		case IDC_E_END_ADDR:
 //		case IDC_E_ALT_PC:
-//			if (HIWORD(wParam) == EN_UPDATE) {
-//				CDumpMemory * _this = (CDumpMemory *)GetProp((HWND)hDlg,"Class");
+//			if (HIWORD(wParam) == EN_UPDATE)
+//			{
+//				CDumpMemory * _this = (CDumpMemory *)GetProp(hDlg,"Class");
 //
 //				TCHAR szTmp[20], szTmp2[20];
 //				DWORD Value;
 //
-//				GetDlgItemText((HWND)hDlg,LOWORD(wParam),szTmp,sizeof(szTmp));
+//				GetDlgItemText(hDlg,LOWORD(wParam),szTmp,sizeof(szTmp));
 //				Value = szTmp[1] =='x'?AsciiToHex(&szTmp[2]):AsciiToHex(szTmp);
-//				//if (Value > Stop)  { Value = Stop; }
-//				//if (Value < Start) { Value = Start; }
+//				//if (Value > Stop) 
+//				//{
+//				//	Value = Stop;
+//				//}
+//				//if (Value < Start)
+//				//{
+//				//	Value = Start;
+//				//}
 //				sprintf(szTmp2,"0x%X",Value);
-//				if (strcmp(szTmp,szTmp2) != 0) {
-//					SetDlgItemText((HWND)hDlg,LOWORD(wParam),szTmp2);
+//				if (strcmp(szTmp,szTmp2) != 0)
+//				{
+//					SetDlgItemText(hDlg,LOWORD(wParam),szTmp2);
 //					if (_this->SelStop == 0) { _this->SelStop = strlen(szTmp2); _this->SelStart = _this->SelStop; }
-//					SendDlgItemMessage((HWND)hDlg,LOWORD(wParam),EM_SETSEL,(WPARAM)_this->SelStart,(LPARAM)_this->SelStop);
-//				} else {
+//					SendDlgItemMessage(hDlg,LOWORD(wParam),EM_SETSEL,(WPARAM)_this->SelStart,(LPARAM)_this->SelStop);
+//				}
+//				else
+//				{
 //					WORD NewSelStart, NewSelStop;
-//					SendDlgItemMessage((HWND)hDlg,LOWORD(wParam),EM_GETSEL,(WPARAM)&NewSelStart,(LPARAM)&NewSelStop);
-//					if (NewSelStart != 0) { _this->SelStart = NewSelStart; _this->SelStop = NewSelStop; }
+//					SendDlgItemMessage(hDlg,LOWORD(wParam),EM_GETSEL,(WPARAM)&NewSelStart,(LPARAM)&NewSelStop);
+//					if (NewSelStart != 0)
+//					{
+//						_this->SelStart = NewSelStart; _this->SelStop = NewSelStop;
+//					}
 //				}
 //			}
 //			break;
 //		case IDC_BTN_CHOOSE_FILE:
 //			{
-//				CDumpMemory * _this = (CDumpMemory *)GetProp((HWND)hDlg,"Class");
+//				CDumpMemory * _this = (CDumpMemory *)GetProp(hDlg,"Class");
 //
 //				OPENFILENAME openfilename;
 //				char FileName[_MAX_PATH],Directory[_MAX_PATH];
@@ -447,7 +492,7 @@ bool CDumpMemory::DumpMemory ( LPCSTR FileName,DumpFormat Format, DWORD StartPC,
 //				strcpy(Directory,g_Settings->LoadString(ApplicationDir).c_str());
 //
 //				openfilename.lStructSize  = sizeof( openfilename );
-//				openfilename.hwndOwner    = (HWND)hDlg;
+//				openfilename.hwndOwner    = hDlg;
 //				openfilename.lpstrFilter  = "Text file (*.txt)\0*.txt;\0All files (*.*)\0*.*\0";
 //				openfilename.lpstrFile    = FileName;
 //				openfilename.lpstrInitialDir    = Directory;
@@ -463,59 +508,59 @@ bool CDumpMemory::DumpMemory ( LPCSTR FileName,DumpFormat Format, DWORD StartPC,
 //					{
 //                        strcat(FileName,".txt");
 //					}
-//					SetDlgItemText((HWND)hDlg,IDC_FILENAME,FileName);
+//					SetDlgItemText(hDlg,IDC_FILENAME,FileName);
 //				}	
 //			}
 //			break;
 //		case IDCANCEL:
-//			RemoveProp((HWND)hDlg,"Class");
-//			EndDialog((HWND)hDlg,0);
+//			RemoveProp(hDlg,"Class");
+//			EndDialog(hDlg,0);
 //			break;
 //		case IDOK:
 //			{
-//				CDumpMemory * _this = (CDumpMemory *)GetProp((HWND)hDlg,"Class");
+//				CDumpMemory * _this = (CDumpMemory *)GetProp(hDlg,"Class");
 //				TCHAR szTmp[20], FileName[MAX_PATH];
 //
-//				int CurrentFormatSel = SendDlgItemMessage((HWND)hDlg,IDC_FORMAT,CB_GETCURSEL,0,0);
-//				DumpFormat Format = (DumpFormat)SendDlgItemMessage((HWND)hDlg,IDC_FORMAT,CB_GETITEMDATA,CurrentFormatSel,0);
+//				int CurrentFormatSel = SendDlgItemMessage(hDlg,IDC_FORMAT,CB_GETCURSEL,0,0);
+//				DumpFormat Format = (DumpFormat)SendDlgItemMessage(hDlg,IDC_FORMAT,CB_GETITEMDATA,CurrentFormatSel,0);
 //
-//				GetDlgItemText((HWND)hDlg,IDC_E_START_ADDR,szTmp,sizeof(szTmp));
+//				GetDlgItemText(hDlg,IDC_E_START_ADDR,szTmp,sizeof(szTmp));
 //				DWORD StartPC = szTmp[1] =='x'?AsciiToHex(&szTmp[2]):AsciiToHex(szTmp);
-//				GetDlgItemText((HWND)hDlg,IDC_E_END_ADDR,szTmp,sizeof(szTmp));
+//				GetDlgItemText(hDlg,IDC_E_END_ADDR,szTmp,sizeof(szTmp));
 //				DWORD EndPC = szTmp[1] =='x'?AsciiToHex(&szTmp[2]):AsciiToHex(szTmp);
-//				GetDlgItemText((HWND)hDlg,IDC_E_ALT_PC,szTmp,sizeof(szTmp));
+//				GetDlgItemText(hDlg,IDC_E_ALT_PC,szTmp,sizeof(szTmp));
 //				DWORD DumpPC = szTmp[1] =='x'?AsciiToHex(&szTmp[2]):AsciiToHex(szTmp);
-//				GetDlgItemText((HWND)hDlg,IDC_FILENAME,FileName,sizeof(FileName));
+//				GetDlgItemText(hDlg,IDC_FILENAME,FileName,sizeof(FileName));
 //
 //				if (strlen(FileName) == 0) 
 //				{
-//					g_Notify->DisplayError("Please Choose target file");
-//					SetFocus(GetDlgItem((HWND)hDlg,IDC_FILENAME));
+//					g_Notify->DisplayError(L"Please Choose target file");
+//					SetFocus(GetDlgItem(hDlg,IDC_FILENAME));
 //					return false;
 //				}
 //
-//				if (SendDlgItemMessage((HWND)hDlg,IDC_USE_ALT_PC,BM_GETSTATE, 0,0) != BST_CHECKED)
+//				if (SendDlgItemMessage(hDlg,IDC_USE_ALT_PC,BM_GETSTATE, 0,0) != BST_CHECKED)
 //				{
 //					DumpPC = _this->g_MMU->SystemRegisters()->PROGRAM_COUNTER;
 //				}
 //				//disable buttons
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDC_E_START_ADDR),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDC_E_END_ADDR),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDC_E_ALT_PC),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDC_USE_ALT_PC),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDC_FILENAME),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDC_BTN_CHOOSE_FILE),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDC_FORMAT),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDOK),FALSE);
-//				EnableWindow(GetDlgItem((HWND)hDlg,IDCANCEL),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDC_E_START_ADDR),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDC_E_END_ADDR),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDC_E_ALT_PC),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDC_USE_ALT_PC),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDC_FILENAME),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDC_BTN_CHOOSE_FILE),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDC_FORMAT),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDOK),FALSE);
+//				EnableWindow(GetDlgItem(hDlg,IDCANCEL),FALSE);
 //				if (!_this->DumpMemory(FileName,Format,StartPC,EndPC,DumpPC))
 //				{
 //					//enable buttons
 //					return false;
 //				}
 //			}
-//			RemoveProp((HWND)hDlg,"Class");
-//			EndDialog((HWND)hDlg,0);
+//			RemoveProp(hDlg,"Class");
+//			EndDialog(hDlg,0);
 //			break;
 //		}
 //		break;
@@ -534,7 +579,7 @@ bool CDumpMemory::DumpMemory ( LPCSTR FileName,DumpFormat Format, DWORD StartPC,
 //			CLog LogFile(FileName);
 //			if (!LogFile.IsOpen())
 //			{
-//				g_Notify->DisplayError("Failed to open\n%s",FileName);
+//				g_Notify->DisplayError(L"Failed to open\n%s",FileName);
 //				return false;
 //			}
 //
@@ -550,3 +595,4 @@ bool CDumpMemory::DumpMemory ( LPCSTR FileName,DumpFormat Format, DWORD StartPC,
 //	}
 //	return false;
 //}
+#endif

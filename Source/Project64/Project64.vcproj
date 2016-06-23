@@ -60,6 +60,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				EmbedManifest="false"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -118,65 +119,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Beta Release|Win32"
-			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)PropertySheets/Win32.Release.vsprops"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="BETA_RELEASE;"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				DataExecutionPrevention="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
+				EmbedManifest="false"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -225,18 +168,6 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
-				<FileConfiguration
-					Name="Beta Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="ValidateBinary.cpp"
-				>
 			</File>
 			<Filter
 				Name="Settings Files"
@@ -537,6 +468,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\N64 System\Mips\Rumblepak.cpp"
+						>
+					</File>
+					<File
 						RelativePath=".\N64 System\Mips\Mempak.cpp"
 						>
 					</File>
@@ -700,48 +635,12 @@
 							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
-					<FileConfiguration
-						Name="Beta Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="3rd Party\Processor Info.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Beta Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
 				</File>
 				<Filter
 					Name="ZLib Source"
 					>
 					<File
-						RelativePath="3rd Party\zlib\UNZIP.C"
+						RelativePath="..\3rd Party\zlib\contrib\minizip\unzip.c"
 						>
 						<FileConfiguration
 							Name="Debug|Win32"
@@ -755,16 +654,6 @@
 						</FileConfiguration>
 						<FileConfiguration
 							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-								UsePrecompiledHeader="0"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Beta Release|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -775,7 +664,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="3rd Party\zlib\zip.c"
+						RelativePath="..\3rd Party\zlib\contrib\minizip\zip.c"
 						>
 						<FileConfiguration
 							Name="Debug|Win32"
@@ -789,16 +678,6 @@
 						</FileConfiguration>
 						<FileConfiguration
 							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-								UsePrecompiledHeader="0"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Beta Release|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -896,21 +775,16 @@
 						AdditionalIncludeDirectories="User Interface"
 					/>
 				</FileConfiguration>
-				<FileConfiguration
-					Name="Beta Release|Win32"
-					>
-					<Tool
-						Name="VCResourceCompilerTool"
-						PreprocessorDefinitions=""
-						AdditionalIncludeDirectories="User Interface"
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl"
 			>
+			<File
+				RelativePath="Version.h"
+				>
+			</File>
 			<File
 				RelativePath="Multilanguage.h"
 				>
@@ -933,10 +807,6 @@
 			</File>
 			<File
 				RelativePath="User Interface.h"
-				>
-			</File>
-			<File
-				RelativePath="Validate Binary.h"
 				>
 			</File>
 			<File
@@ -1250,6 +1120,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\N64 System\Mips\Rumblepak.h"
+						>
+					</File>
+					<File
 						RelativePath=".\N64 System\Mips\Mempak.H"
 						>
 					</File>
@@ -1443,38 +1317,26 @@
 					>
 				</File>
 				<File
-					RelativePath="3rd Party\Processor Info.h"
-					>
-				</File>
-				<File
 					RelativePath="3rd Party\zip.h"
 					>
 				</File>
 				<Filter
-					Name="HTML Help"
-					>
-					<File
-						RelativePath="3rd Party\HTML Help\HTMLHELP.H"
-						>
-					</File>
-				</Filter>
-				<Filter
 					Name="Zlib Headers"
 					>
 					<File
-						RelativePath="3rd Party\zlib\UNZIP.H"
+						RelativePath="..\3rd Party\zlib\zconf.h"
 						>
 					</File>
 					<File
-						RelativePath="3rd Party\zlib\ZCONF.H"
+						RelativePath="..\3rd Party\zlib\zlib.h"
 						>
 					</File>
 					<File
-						RelativePath="3rd Party\zlib\zip.h"
+						RelativePath="..\3rd Party\zlib\contrib\minizip\unzip.h"
 						>
 					</File>
 					<File
-						RelativePath="3rd Party\zlib\ZLIB.H"
+						RelativePath="..\3rd Party\zlib\contrib\minizip\zip.h"
 						>
 					</File>
 				</Filter>

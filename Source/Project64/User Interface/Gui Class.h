@@ -21,7 +21,7 @@ class CriticalSection;
 enum { 
 	WM_HIDE_CUROSR   = WM_USER + 10,
 	WM_MAKE_FOCUS    = WM_USER + 17,
-	//WM_INIATE_PLUGIN = WM_USER + 18,
+	WM_RESET_PLUGIN  = WM_USER + 18,
 	WM_BORWSER_TOP   = WM_USER + 40,
 };
 
@@ -31,12 +31,21 @@ class CMainGui :
 {
 	enum { StatusBarID = 400 };
 
+	enum { Timer_SetWindowPos = 1 };
+
+	struct RESET_PLUGIN
+	{
+		CN64System * system;
+		CPlugins * plugins;
+		HANDLE hEvent;
+		bool res;
+	};
 public:
 		 CMainGui ( bool bMainWindow, const char * WindowTitle = "" );
 		~CMainGui ( void );
 	
 	//Message Processing	 
-	int  ProcessAllMessages ( void );
+	WPARAM ProcessAllMessages ( void );
 	bool ProcessGuiMessages ( void );
 
 	//debugging functions
@@ -51,7 +60,7 @@ public:
 	void Show            ( bool ShowWindow ); //Show or Hide the current window
 	void MakeWindowOnTop ( bool OnTop );
 	void BringToTop      ( void );
-	void Caption         ( LPCSTR Caption );  //Set the caption of the window
+	void Caption         ( LPCWSTR Caption );  //Set the caption of the window
 	void SaveWindowLoc   ( void );
 
 	//Menu Function
@@ -60,7 +69,7 @@ public:
 	CBaseMenu * GetMenuClass ( void ) { return m_Menu; }
 
 	// Status bar
-	void SetStatusText  ( int Panel,const char * Text );
+	void SetStatusText  ( int Panel,const wchar_t * Text );
 	void ShowStatusBar  ( bool ShowBar );
 
 	//About Window
@@ -68,7 +77,7 @@ public:
 	void AboutBox ( void );
 
 	//Plugins
-	bool InitiatePlugins ( void );
+	bool ResetPlugins ( CPlugins * plugins, CN64System * System );
 
 	//Get Window Handle
 	inline HWND GetHandle ( void ) const { return m_hMainWindow; }
@@ -90,7 +99,7 @@ private:
 
 	friend DWORD CALLBACK AboutBoxProc ( HWND, DWORD, DWORD, DWORD );
 	friend DWORD CALLBACK AboutIniBoxProc ( HWND, DWORD, DWORD, DWORD );
-	static DWORD CALLBACK MainGui_Proc ( HWND, DWORD, DWORD, DWORD );
+	static LRESULT CALLBACK MainGui_Proc ( HWND, DWORD, DWORD, DWORD );
 
 	friend void RomBowserEnabledChanged  (CMainGui * Gui);
 	friend void RomBowserColoumnsChanged (CMainGui * Gui);
@@ -99,12 +108,15 @@ private:
 	CBaseMenu     * m_Menu;
 
 	HWND  m_hMainWindow, m_hStatusWnd;
-	DWORD       m_ThreadId;
-#ifdef BETA_RELEASE
-	bool        m_hacked;
-	DWORD       m_InvalidExeMsg;
-#endif
-	const bool  m_bMainWindow;
+	DWORD          m_ThreadId;
+
+	const bool     m_bMainWindow;
+	bool           m_Created;
+	bool           m_AttachingMenu;
+	bool           m_MakingVisible;
+	bool           m_ResetPlugins;
+	RESET_PLUGIN * m_ResetInfo;
+
 	CriticalSection m_CS;
 
 	bool        m_SaveMainWindowPos;

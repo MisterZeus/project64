@@ -9,6 +9,8 @@
 *                                                                           *
 ****************************************************************************/
 #include "stdafx.h"
+
+#ifdef WINDOWS_UI
 #include "Settings Page.h"
 
 CAdvancedOptionsPage::CAdvancedOptionsPage (HWND hParent, const RECT & rcDispay )
@@ -17,6 +19,15 @@ CAdvancedOptionsPage::CAdvancedOptionsPage (HWND hParent, const RECT & rcDispay 
 	{
 		return;
 	}
+
+	//Set the text for all gui Items
+	SetDlgItemTextW(m_hWnd, IDC_START_ON_ROM_OPEN, GS(ADVANCE_AUTO_START));
+	SetDlgItemTextW(m_hWnd, IDC_ZIP, GS(ADVANCE_COMPRESS));
+	SetDlgItemTextW(m_hWnd, IDC_DEBUGGER, GS(ADVANCE_DEBUGGER));
+	SetDlgItemTextW(m_hWnd, IDC_REMEMBER_CHEAT, GS(OPTION_REMEMBER_CHEAT));
+	SetDlgItemTextW(m_hWnd, IDC_CHECK_RUNNING, GS(OPTION_CHECK_RUNNING));
+	SetDlgItemTextW(m_hWnd, IDC_DISPLAY_FRAMERATE, GS(OPTION_CHANGE_FR));
+
 	AddModCheckBox(GetDlgItem(IDC_START_ON_ROM_OPEN),Setting_AutoStart);
 	AddModCheckBox(GetDlgItem(IDC_ZIP),Setting_AutoZipInstantSave);
 	AddModCheckBox(GetDlgItem(IDC_DEBUGGER),Debugger_Enabled);
@@ -28,9 +39,9 @@ CAdvancedOptionsPage::CAdvancedOptionsPage (HWND hParent, const RECT & rcDispay 
 	ComboBox = AddModComboBox(GetDlgItem(IDC_FRAME_DISPLAY_TYPE),UserInterface_FrameDisplayType);
 	if (ComboBox)
 	{
-		ComboBox->AddItem(GS(STR_FR_VIS), FR_VIs );
-		ComboBox->AddItem(GS(STR_FR_DLS), FR_DLs );
-		ComboBox->AddItem(GS(STR_FR_PERCENT), FR_PERCENT );
+		ComboBox->AddItemW(GS(STR_FR_VIS), FR_VIs );
+		ComboBox->AddItemW(GS(STR_FR_DLS), FR_DLs );
+		ComboBox->AddItemW(GS(STR_FR_PERCENT), FR_PERCENT );
 	}
 
 	UpdatePageSettings();
@@ -61,3 +72,4 @@ void CAdvancedOptionsPage::ResetPage()
 {
 	CSettingsPageImpl<CAdvancedOptionsPage>::ResetPage();
 }
+#endif

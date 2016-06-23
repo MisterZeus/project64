@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#include <TChar.H>
+
 CFile::CFile() :
 	m_hFile(INVALID_HANDLE_VALUE),
 	m_bCloseOnDelete(false)
@@ -62,11 +64,6 @@ bool CFile::Open(LPCTSTR lpszFileName, ULONG nOpenFlags)
 		_ASSERTE(false);
 	}
 
-	COSVersion osver;
-	WORD       ostype   = osver.GetOSType();		
-	BOOL       is_NT    =((ostype & OS_WINNT) != 0);
-
-
 	// map share mode
 	ULONG dwShareMode = 0;
 	
@@ -94,7 +91,7 @@ bool CFile::Open(LPCTSTR lpszFileName, ULONG nOpenFlags)
 		dwCreateFlag = OPEN_EXISTING;
 
 	// attempt file creation
-	HANDLE hFile = ::CreateFile(lpszFileName, dwAccess, dwShareMode, is_NT ? &sa : NULL,
+	HANDLE hFile = ::CreateFile(lpszFileName, dwAccess, dwShareMode, &sa,
 		dwCreateFlag, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{ //#define ERROR_PATH_NOT_FOUND             3L

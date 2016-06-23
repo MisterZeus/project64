@@ -1,13 +1,19 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include "Version.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "WinResrc.h"
+
+#ifdef IDC_STATIC
+#undef IDC_STATIC
+#endif
+#define IDC_STATIC              (-1)
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -173,12 +179,13 @@ EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL         "Plugged",IDC_PLUGGED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,7,45,13
-    PUSHBUTTON      "Clear Controller",IDC_CLEARCONTROLLER,63,7,67,13
-    PUSHBUTTON      "Default Config",IDC_SETDEFAULT,63,21,67,13
+    PUSHBUTTON      "Clear Controller",IDC_CLEARCONTROLLER,104,7,67,13
+    PUSHBUTTON      "Default Config",IDC_SETDEFAULT,104,21,67,13
     PUSHBUTTON      "Load Profile",IDC_LOADPROFILE,191,7,67,13
     PUSHBUTTON      "Save Profile",IDC_SAVEPROFILE,272,7,67,13
     CONTROL         "PLACEHOLDER",IDC_CONTROLLERTAB,"SysTabControl32",WS_GROUP | WS_TABSTOP,0,38,375,196
     CONTROL         "XInput",IDC_XINPUT_ENABLER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,22,37,10
+    CONTROL         "N64 Mouse",IDC_N64MOUSE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,52,22,51,10
 END
 
 IDD_SHORTCUT DIALOGEX 0, 0, 376, 235
@@ -518,38 +525,32 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,3,0,2
- PRODUCTVERSION 2,3,0,2
- FILEFLAGSMASK 0x3fL
-#ifdef _DEBUG
- FILEFLAGS 0x1L
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS 0x40004L
- FILETYPE 0x2L
- FILESUBTYPE 0x0L
+ FILEVERSION        VER_FILE_VERSION
+ PRODUCTVERSION     VER_PRODUCT_VERSION
+ FILEFLAGSMASK      0x3fL
+ FILEFLAGS          VER_FILEFLAGS
+ FILEOS             VER_FILEOS
+ FILETYPE           VER_FILETYPE
+ FILESUBTYPE        0x0L
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
         BLOCK "000004b0"
         BEGIN
-            VALUE "Comments", "Release Version"
-            VALUE "FileDescription", "Zilmar Spec Plugin for N64 Emulators"
-            VALUE "FileVersion", "2.3c"
-            VALUE "InternalName", "NRage_Input_V2"
-            VALUE "LegalCopyright", "Copyright © 2001-2011 N-Rage, compiled under GPL licensing"
-            VALUE "OriginalFilename", "NRage_Input_V2.dll"
-            VALUE "ProductName", "NRage_Input_V2"
-            VALUE "ProductVersion", "2.3c"
+            VALUE "FileDescription",  VER_FILE_DESCRIPTION_STR "\0"
+            VALUE "FileVersion",      VER_FILE_VERSION_STR "\0"
+            VALUE "InternalName",     VER_INTERNAL_NAME_STR "\0"
+            VALUE "LegalCopyright",   VER_COPYRIGHT_STR "\0"
+            VALUE "OriginalFilename", VER_ORIGINAL_FILENAME_STR "\0"
+            VALUE "ProductName",      VER_PRODUCTNAME_STR
+            VALUE "ProductVersion",   VER_PRODUCT_VERSION_STR "\0"
         END
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x0, 1200
+        VALUE "Translation", 0x409, 1200
     END
 END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -578,7 +579,13 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""afxres.h""\r\0"
+	"#include ""WinResrc.h""\r\n"
+	"\r\n"
+	"#ifdef IDC_STATIC\r\n"
+	"#undef IDC_STATIC\r\n"
+	"#endif\r\n"
+	"#define IDC_STATIC              (-1)\r\n"
+	"\0"
 END
 
 3 TEXTINCLUDE 

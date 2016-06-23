@@ -26,13 +26,7 @@
     <ClCompile Include="MemTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="osversion.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="path.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="registry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="std string.cpp">
@@ -42,9 +36,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Trace.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Version.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -67,13 +58,7 @@
     <ClInclude Include="MemTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="osversion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="path.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="registry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Smart Pointer.h">
@@ -89,9 +74,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TraceDefs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

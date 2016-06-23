@@ -9,6 +9,8 @@
 *                                                                           *
 ****************************************************************************/
 #include "stdafx.h"
+
+#ifdef WINDOWS_UI
 #include "Settings Page.h"
 
 COptionsShortCutsPage::COptionsShortCutsPage (HWND hParent, const RECT & rcDispay ) :
@@ -19,13 +21,14 @@ COptionsShortCutsPage::COptionsShortCutsPage (HWND hParent, const RECT & rcDispa
 		return;
 	}
 
-	SetDlgItemText(IDC_S_CPU_STATE,GS(ACCEL_CPUSTATE_TITLE));	
-	SetDlgItemText(IDC_MENU_ITEM_TEXT,GS(ACCEL_MENUITEM_TITLE));	
-	SetDlgItemText(IDC_S_CURRENT_KEYS,GS(ACCEL_CURRENTKEYS_TITLE));	
-	SetDlgItemText(IDC_S_SELECT_SHORT,GS(ACCEL_SELKEY_TITLE));	
-	SetDlgItemText(IDC_S_CURRENT_ASSIGN,GS(ACCEL_ASSIGNEDTO_TITLE));	
-	SetDlgItemText(IDC_ASSIGN,GS(ACCEL_ASSIGN_BTN));	
-	SetDlgItemText(IDC_REMOVE,GS(ACCEL_REMOVE_BTN));	
+	SetDlgItemTextW(m_hWnd, IDC_S_CPU_STATE,GS(ACCEL_CPUSTATE_TITLE));	
+	SetDlgItemTextW(m_hWnd, IDC_MENU_ITEM_TEXT,GS(ACCEL_MENUITEM_TITLE));	
+	SetDlgItemTextW(m_hWnd, IDC_S_CURRENT_KEYS,GS(ACCEL_CURRENTKEYS_TITLE));	
+	SetDlgItemTextW(m_hWnd, IDC_S_SELECT_SHORT,GS(ACCEL_SELKEY_TITLE));	
+	SetDlgItemTextW(m_hWnd, IDC_S_CURRENT_ASSIGN,GS(ACCEL_ASSIGNEDTO_TITLE));	
+	SetDlgItemTextW(m_hWnd, IDC_ASSIGN,GS(ACCEL_ASSIGN_BTN));	
+	SetDlgItemTextW(m_hWnd, IDC_REMOVE,GS(ACCEL_REMOVE_BTN));
+	SetDlgItemTextW(m_hWnd, IDC_KEY_PROMPT, GS(ACCEL_DETECTKEY));
 
 	m_CreateNewShortCut.AttachToDlgItem(m_hWnd,IDC_S_SELECT_SHORT);
 	m_CpuState.Attach(GetDlgItem(IDC_C_CPU_STATE));
@@ -35,9 +38,9 @@ COptionsShortCutsPage::COptionsShortCutsPage (HWND hParent, const RECT & rcDispa
 
 	m_MenuItems.ModifyStyle(0,TVS_SHOWSELALWAYS);
 
-	m_CpuState.SetItemData(m_CpuState.AddString(GS(ACCEL_CPUSTATE_1)),CMenuShortCutKey::GAME_NOT_RUNNING);
-	m_CpuState.SetItemData(m_CpuState.AddString(GS(ACCEL_CPUSTATE_3)),CMenuShortCutKey::GAME_RUNNING_WINDOW);
-	m_CpuState.SetItemData(m_CpuState.AddString(GS(ACCEL_CPUSTATE_4)),CMenuShortCutKey::GAME_RUNNING_FULLSCREEN);
+	m_CpuState.SetItemData(m_CpuState.AddStringW(GS(ACCEL_CPUSTATE_1)),CMenuShortCutKey::GAME_NOT_RUNNING);
+	m_CpuState.SetItemData(m_CpuState.AddStringW(GS(ACCEL_CPUSTATE_3)),CMenuShortCutKey::GAME_RUNNING_WINDOW);
+	m_CpuState.SetItemData(m_CpuState.AddStringW(GS(ACCEL_CPUSTATE_4)),CMenuShortCutKey::GAME_RUNNING_FULLSCREEN);
 	m_CpuState.SetCurSel(0);
 	
 	int VirtualKeyListSize;
@@ -99,16 +102,24 @@ void COptionsShortCutsPage::OnCpuStateChanged(UINT /*Code*/, int /*id*/, HWND /*
 
 		if (hParent == NULL)
 		{
-			hParent = m_MenuItems.InsertItem(TVIF_TEXT | TVIF_PARAM,GS(Item->second.Section()),0,0,0,0,
-				Item->second.Section(),TVI_ROOT,TVI_LAST);
+			hParent = m_MenuItems.InsertItemW(TVIF_TEXT | TVIF_PARAM,GS(Item->second.Section()),0,0,0,0, Item->second.Section(),TVI_ROOT,TVI_LAST);
 		}
 
-		stdstr str = GS(Item->second.Title());
-		str.Replace("&","");
-		str.Replace("...","");
+		wstring str = GS(Item->second.Title());
+		std::wstring::size_type pos = str.find( L"&" );
+		while ( pos != std::wstring::npos )
+		{
+			str.replace( pos, 1, L"" );
+			pos = str.find( L"&", pos );
+		}
+		pos = str.find( L"..." );
+		while ( pos != std::wstring::npos )
+		{
+			str.replace( pos, 3, L"" );
+			pos = str.find( L"...", pos );
+		}
 
-		HTREEITEM hItem = m_MenuItems.InsertItem(TVIF_TEXT | TVIF_PARAM,str.c_str(),0,0,0,0,
-			(DWORD_PTR)&Item->second,hParent,TVI_LAST);
+		HTREEITEM hItem = m_MenuItems.InsertItemW(TVIF_TEXT | TVIF_PARAM,str.c_str(),0,0,0,0, (DWORD_PTR)&Item->second,hParent,TVI_LAST);
 
 		const SHORTCUT_KEY_LIST & ShortCutList = Item->second.GetAccelItems();
 		for (SHORTCUT_KEY_LIST::const_iterator ShortCut_item = ShortCutList.begin(); ShortCut_item != ShortCutList.end(); ShortCut_item ++)
@@ -223,7 +234,8 @@ void COptionsShortCutsPage::OnShortCutChanged ( UINT /*Code*/, int /*id*/, HWND 
 
 	ACCESS_MODE AccessLevel = (ACCESS_MODE)m_CpuState.GetItemData(m_CpuState.GetCurSel());
 
-	stdstr str = GS(m_ShortCuts.GetMenuItemName(key,bCtrl,bAlt,bShift,AccessLevel));
+	stdstr str;
+    str.FromUTF16(GS(m_ShortCuts.GetMenuItemName(key,bCtrl,bAlt,bShift,AccessLevel)));
 	if (str.length() > 0)
 	{
 		str.resize(std::remove(str.begin(), str.end(), '&') - str.begin());
@@ -295,7 +307,7 @@ BOOL CALLBACK KeyPromptDlgProc (HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM /*lP
 
 void COptionsShortCutsPage::InputGetKeys (void) 
 {
-	HWND hKeyDlg = CreateDialogParam(GetModuleHandle(NULL),MAKEINTRESOURCE(IDD_Key_Prompt),m_hWnd,KeyPromptDlgProc,(LPARAM)::GetDlgItem(m_hWnd,IDC_VIRTUALKEY));
+	HWND hKeyDlg = CreateDialogParam(GetModuleHandle(NULL),MAKEINTRESOURCE(IDD_Key_Prompt),m_hWnd,(DLGPROC)KeyPromptDlgProc,(LPARAM)::GetDlgItem(m_hWnd,IDC_VIRTUALKEY));
 	::EnableWindow(GetParent(),false);
 	MSG msg;
 
@@ -368,3 +380,4 @@ void COptionsShortCutsPage::ResetPage()
 	m_CurrentKeys.ResetContent();
 	CSettingsPageImpl<COptionsShortCutsPage>::ResetPage();
 }
+#endif

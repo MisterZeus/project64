@@ -60,7 +60,6 @@ __declspec(dllexport) void SetSettingInfo2 (PLUGIN_SETTINGS2 * info);
 __declspec(dllexport) void SetSettingInfo3 (PLUGIN_SETTINGS3 * info);
 }
 
-
 __declspec(dllexport) void SetSettingInfo (PLUGIN_SETTINGS * info) 
 {
 	g_PluginSettings   = *info;
@@ -97,7 +96,9 @@ void RegisterSetting    ( short SettingID, SETTING_DATA_TYPE Type, const char * 
 	if (Category && Category[0] != 0)
 	{
 		_snprintf(FullCategory,sizeof(FullCategory),"%s\\%s",g_PluginSettingName,Category);
-	} else {
+	}
+	else
+	{
 		_snprintf(FullCategory,sizeof(FullCategory),"%s",g_PluginSettingName);
 	}
 
@@ -172,8 +173,12 @@ void FlushSettings ( void )
 	}
 }
 
-unsigned int GetSetting   ( short SettingID )
+unsigned int GetSetting ( short SettingID )
 {
+	if (g_PluginSettings.GetSetting == NULL)
+	{
+		return 0;
+	}
 	return g_PluginSettings.GetSetting(g_PluginSettings.handle,SettingID + g_PluginSettings.SettingStartRange);
 }
 
@@ -189,6 +194,10 @@ const char * GetSettingSz ( short SettingID, char * Buffer, int BufferLen )
 
 const char * GetSystemSettingSz ( short SettingID, char * Buffer, int BufferLen )
 {
+	if (g_PluginSettings.GetSettingSz == NULL)
+	{
+		return "";
+	}
 	return g_PluginSettings.GetSettingSz(g_PluginSettings.handle,SettingID,Buffer,BufferLen);
 }
 
@@ -201,6 +210,3 @@ void SetSettingSz ( short SettingID, const char * Value )
 {
 	g_PluginSettings.SetSettingSz(g_PluginSettings.handle,SettingID + g_PluginSettings.SettingStartRange, Value);
 }
-
-
-

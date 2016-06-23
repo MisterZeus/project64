@@ -253,6 +253,10 @@ bool ProcessKey( DWORD dwKey, DWORD dwSection, LPCSTR pszLine, LPTSTR pszFFDevic
 		if (pController)
 			pController->fXInput = atoi(pszLine);
 		break;
+	case CHK_N64MOUSE:
+		if (pController)
+			pController->fN64Mouse = atoi(pszLine);
+		break;
 	case CHK_PAKTYPE:
 		if (pController)
 			pController->PakType = atoi(pszLine);
@@ -604,7 +608,6 @@ bool ProcessKey( DWORD dwKey, DWORD dwSection, LPCSTR pszLine, LPTSTR pszFFDevic
 
 		}
 		break;
-
 	}
 
 	return bReturn;
@@ -884,6 +887,8 @@ bool GetDirectory( LPTSTR pszDirectory, WORD wDirID )
 			*pSlash = 0;
 		}
 		break;
+	case DIRECTORY_LOG:
+	case DIRECTORY_CONFIG:
 	case DIRECTORY_APPLICATION:
 		break;
 
@@ -911,6 +916,14 @@ bool GetDirectory( LPTSTR pszDirectory, WORD wDirID )
 		pSlash[2] = '\0';
 	}
 
+	if (bReturn && wDirID == DIRECTORY_CONFIG)
+	{
+		strcat(pszDirectory,"Config\\");
+	}
+	if (bReturn && wDirID == DIRECTORY_LOG)
+	{
+		strcat(pszDirectory,"Logs\\");
+	}
 	return bReturn;
 }
 
@@ -1086,7 +1099,7 @@ bool SaveLastBrowseDir( TCHAR *pszFileName, DWORD dwType )
 bool BrowseFile( HWND hDlg, TCHAR *pszFileName, DWORD dwType, bool fSave )
 {
 	TCHAR pszFilter[DEFAULT_BUFFER];
-	TCHAR *pszTitle = NULL;
+	TCHAR pszTitle[DEFAULT_BUFFER];
 	DWORD dwFlags = /*OFN_DONTADDTORECENT |*/ OFN_NOCHANGEDIR;
 	dwFlags |= (fSave)	? OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT
 						: OFN_HIDEREADONLY | OFN_FILEMUSTEXIST;
@@ -1136,7 +1149,8 @@ bool BrowseFile( HWND hDlg, TCHAR *pszFileName, DWORD dwType, bool fSave )
 		return false;
 	}
 
-	for ( ; nFilters > 0; nFilters--) {
+	for ( ; nFilters > 0; nFilters--)
+	{
 		pszTemp += _tcslen(pszTemp);
 		pszTemp += 1;
 		pszTemp += _tcslen(pszTemp);
@@ -1149,7 +1163,6 @@ bool BrowseFile( HWND hDlg, TCHAR *pszFileName, DWORD dwType, bool fSave )
 	TCHAR szFileName[MAX_PATH+1] = _T(""),
 		  szInitialDir[MAX_PATH+1] = _T(""),
 		  *pcSlash;
-
 
 	if( pszFileName[1] == _T(':') || ( pszFileName[1] == _T('\\') && pszFileName[0] == _T('\\') ))
 	{
@@ -1167,7 +1180,6 @@ bool BrowseFile( HWND hDlg, TCHAR *pszFileName, DWORD dwType, bool fSave )
 			GetDirectory( szInitialDir, DIRECTORY_APPLICATION );
 		lstrcpyn( szFileName, pszFileName, ARRAYSIZE(szFileName) );
 	}
-
 
 	OPENFILENAME oFile;
 
@@ -1280,7 +1292,7 @@ bool StoreConfigToINI()
 		return false;
 
 	TCHAR szFilename[MAX_PATH];
-	GetDirectory(szFilename, DIRECTORY_DLL);
+	GetDirectory(szFilename, DIRECTORY_CONFIG);
 	_tcscat(szFilename, _T("NRage.ini"));
 	FILE *fFile = _tfopen(szFilename, _T("wS"));	// write, optimize for sequential
 
@@ -1379,7 +1391,7 @@ bool LoadConfigFromINI()
 	char szLine[4096];
 
 	TCHAR szFilename[MAX_PATH];
-	GetDirectory(szFilename, DIRECTORY_DLL);
+	GetDirectory(szFilename, DIRECTORY_CONFIG);
 	_tcscat(szFilename, _T("NRage.ini"));
 	fFile = _tfopen(szFilename, _T("rS"));	// read, optimize for sequential
 
@@ -1419,7 +1431,7 @@ LANGID GetLanguageFromINI()
 	char szLine[4096];
 
 	TCHAR szFilename[MAX_PATH];
-	GetDirectory(szFilename, DIRECTORY_DLL);
+	GetDirectory(szFilename, DIRECTORY_CONFIG);
 	_tcscat(szFilename, _T("NRage.ini"));
 	fFile = _tfopen(szFilename, _T("rS"));	// read, optimize for sequential
 
@@ -1477,6 +1489,7 @@ void DumpControllerSettings(FILE * fFile, int i, bool bIsINI)
 
 	fprintf(fFile, STRING_INI_PLUGGED "=%u\n", g_ivConfig->Controllers[i].fPlugged);
 	fprintf(fFile, STRING_INI_XINPUT "=%u\n", g_ivConfig->Controllers[i].fXInput);
+	fprintf(fFile, STRING_INI_N64MOUSE "=%u\n", g_ivConfig->Controllers[i].fN64Mouse);
 	fprintf(fFile, STRING_INI_RAWDATA "=%u\n", g_ivConfig->Controllers[i].fRawData);
 	fprintf(fFile, STRING_INI_PAKTYPE "=%u\n", g_ivConfig->Controllers[i].PakType);
 	fprintf(fFile, STRING_INI_REALN64RANGE "=%u\n", g_ivConfig->Controllers[i].fRealN64Range);

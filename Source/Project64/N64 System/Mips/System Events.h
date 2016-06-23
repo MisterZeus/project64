@@ -10,7 +10,8 @@
 ****************************************************************************/
 #pragma once
 
-enum SystemEvent {
+enum SystemEvent
+{
 	SysEvent_ExecuteInterrupt,
 	SysEvent_GSButtonPressed,
 	SysEvent_ResetCPU_Soft,
@@ -25,6 +26,7 @@ enum SystemEvent {
 	SysEvent_PauseCPU_LoadGame,
 	SysEvent_PauseCPU_DumpMemory,
 	SysEvent_PauseCPU_SearchMemory,
+	SysEvent_PauseCPU_Settings,
 	SysEvent_ResumeCPU_FromMenu,
 	SysEvent_ResumeCPU_AppGainedActive,
 	SysEvent_ResumeCPU_AppGainedFocus,
@@ -32,8 +34,9 @@ enum SystemEvent {
 	SysEvent_ResumeCPU_LoadGame,
 	SysEvent_ResumeCPU_DumpMemory,
 	SysEvent_ResumeCPU_SearchMemory,
+	SysEvent_ResumeCPU_Settings,
 	SysEvent_ChangingFullScreen,
-//	SysEvent_ChangePlugins,
+	SysEvent_ChangePlugins,
 	SysEvent_SaveMachineState,
 	SysEvent_LoadMachineState,
 	SysEvent_Interrupt_SP,
@@ -52,23 +55,27 @@ class CSystemEvents
 	typedef std::vector<SystemEvent> EventList;
 
 protected:
-	CSystemEvents(CN64System * System);
+	CSystemEvents(CN64System * System, CPlugins * Plugins);
 	virtual ~CSystemEvents();
 
 public:
-	void ExecuteEvents ( void );
-	void QueueEvent    ( SystemEvent action);
+	void ExecuteEvents();
+	void QueueEvent(SystemEvent action);
 
-	inline const BOOL & DoSomething ( void ) const { return m_bDoSomething; }
+	const BOOL & DoSomething() const
+	{
+		return m_bDoSomething;
+	}
 
 private:
-	CSystemEvents(void);							// Disable default constructor
-	CSystemEvents(const CSystemEvents&);			// Disable copy constructor
-	CSystemEvents& operator=(const CSystemEvents&);	// Disable assignment
+	CSystemEvents();                                // Disable default constructor
+	CSystemEvents(const CSystemEvents&);            // Disable copy constructor
+	CSystemEvents& operator=(const CSystemEvents&); // Disable assignment
 
-	//void ChangePluginFunc( void );
+	void ChangePluginFunc();
 
 	CN64System    * m_System;
+	CPlugins      * m_Plugins;
 	EventList       m_Events;
 	BOOL            m_bDoSomething;
 	CriticalSection m_CS;

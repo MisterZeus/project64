@@ -22,11 +22,11 @@ void InitializeLog ( void)
 	{
 		LogFilePath.CreateDirectory();
 	}
-	LogFilePath.SetNameExtension(_T("Project64.log"));
+	LogFilePath.SetNameExtension("Project64.log");
 
 	LogFile = new CTraceFileLog(LogFilePath, g_Settings->LoadDword(Debugger_AppLogFlush) != 0, Log_New,500);
 #ifdef VALIDATE_DEBUG
-	LogFile->SetTraceLevel((TraceLevel)(g_Settings->LoadDword(Debugger_AppLogLevel) | TraceValidate));
+	LogFile->SetTraceLevel((TraceLevel)(g_Settings->LoadDword(Debugger_AppLogLevel) | TraceValidate | TraceDebug));
 #else
 	LogFile->SetTraceLevel((TraceLevel)g_Settings->LoadDword(Debugger_AppLogLevel));
 #endif
@@ -97,7 +97,7 @@ void InitializeLog ( void)
 void FixDirectories ( void )
 {
 	CPath Directory(CPath::MODULE_DIRECTORY);
-	Directory.AppendDirectory(_T("Config"));
+	Directory.AppendDirectory("Config");
 	if (!Directory.DirectoryExists()) Directory.CreateDirectory();
 
 	Directory.UpDirectory();
@@ -173,39 +173,51 @@ const char * AppName ( void )
 	static stdstr Name;
 	if (Name.empty())
 	{
-		stdstr StrVersion(VersionInfo(VERSION_PRODUCT_VERSION));
-		strvector parts = StrVersion.Tokenize(".");
-		if (parts.size() == 4)
-		{
-			Name = stdstr_f("Project64 %s.%s",parts[0].c_str(),parts[1].c_str());
-		}
-		else 
-		{
-			Name = "Project64";
-		}
+		Name = stdstr_f("Project64 %s", VER_FILE_VERSION_STR);
 	}
 	return Name.c_str();
 }
 
-int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR /*lpszArgs*/, int /*nWinMode*/) 
+#ifndef WINDOWS_UI
+int main(int argc, char* argv[])
+{
+    while (argc > 0)
+    {
+        puts(argv[--argc]);
+    }
+    putchar('\n');
+
+    fprintf(
+        stderr,
+        "Cross-platform (graphical/terminal?) UI not yet implemented.\n"
+    );
+    return 0;
+}
+#else
+int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR /*lpszArgs*/, int /*nWinMode*/)
 {
 	FixDirectories();
+
+	char *lbuffer = new char[10];
+	if (GetLocaleInfoA(LOCALE_SYSTEM_DEFAULT, LOCALE_SABBREVLANGNAME, lbuffer, 10))
+		setlocale(LC_ALL, lbuffer);
+	delete lbuffer;
 
 	CoInitialize(NULL);
 	try
 	{
 		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL );
-		_Lang = new CLanguage();
+		g_Lang = new CLanguage();
 
 		g_Settings = new CSettings;
-		g_Settings->Initilize(AppName());
+		g_Settings->Initialize(AppName());
 
 		if (g_Settings->LoadBool(Setting_CheckEmuRunning) && 
 			TerminatedExistingEmu())
 		{
 			delete g_Settings;
 			g_Settings = new CSettings;
-			g_Settings->Initilize(AppName());
+			g_Settings->Initialize(AppName());
 		}
 
 		InitializeLog();
@@ -220,38 +232,27 @@ int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR /
 		g_Plugins = new CPlugins(g_Settings->LoadString(Directory_Plugin));
 
 		//Select the language
-		_Lang->LoadCurrentStrings(true);
+		g_Lang->LoadCurrentStrings(true);
 
 		//Create the main window with Menu
 		WriteTrace(TraceDebug,__FUNCTION__ ": Create Main Window");
 		stdstr WinTitle(AppName());
-#ifdef BETA_RELEASE
-		WinTitle.Format("Project64 %s (%s)",VersionInfo(VERSION_PRODUCT_VERSION).c_str(),g_Settings->LoadString(Beta_UserName).c_str());
-#else
-		WinTitle.Format("Project64 %s",VersionInfo(VERSION_PRODUCT_VERSION).c_str());
-#endif
+
+		WinTitle.Format("Project64 %s", VER_FILE_VERSION_STR);
+
 		CMainGui  MainWindow(true,WinTitle.c_str()), HiddenWindow(false);
 		CMainMenu MainMenu(&MainWindow);
 		g_Plugins->SetRenderWindows(&MainWindow,&HiddenWindow);
 		g_Notify->SetMainWindow(&MainWindow);
 
-#ifdef BETA_RELEASE
+		if (__argc > 1)
 		{
-			stdstr_f User("%s",g_Settings->LoadString(Beta_UserName).c_str());
-			stdstr_f Email("%s",g_Settings->LoadString(Beta_EmailAddress).c_str());
-
-			if (MD5(User).hex_digest() != g_Settings->LoadString(Beta_UserNameMD5) ||
-				MD5(Email).hex_digest() != g_Settings->LoadString(Beta_EmailAddressMD5))
-			{
-				return false;
-			}
-		}
-#endif
-		if (__argc > 1) {
 			WriteTraceF(TraceDebug,__FUNCTION__ ": Cmd line found \"%s\"",__argv[1]);
 			MainWindow.Show(true);	//Show the main window
 			CN64System::RunFileImage(__argv[1]);
-		} else {		
+		} 
+		else 
+		{		
 			if (g_Settings->LoadDword(RomBrowser_Enabled))
 			{ 
 				WriteTrace(TraceDebug,__FUNCTION__ ": Show Rom Browser");
@@ -291,7 +292,7 @@ int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR /
 	if (g_Rom)      { delete g_Rom; g_Rom = NULL; }
 	if (g_Plugins)  { delete g_Plugins; g_Plugins = NULL; }
 	if (g_Settings) { delete g_Settings; g_Settings = NULL; }
-	if (_Lang)     { delete _Lang; _Lang = NULL; }
+	if (g_Lang)     { delete g_Lang; g_Lang = NULL; }
 
 	CMipsMemoryVM::FreeReservedMemory();
 
@@ -300,3 +301,4 @@ int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR /
 	CloseTrace();
 	return true;
 }
+#endif

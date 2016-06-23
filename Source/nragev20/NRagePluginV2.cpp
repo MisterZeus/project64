@@ -32,6 +32,7 @@
 #include "PakIO.h"
 #include "DirectInput.h"
 #include "International.h"
+#include "Version.h"
 
 // ProtoTypes //
 bool prepareHeap();
@@ -43,6 +44,7 @@ DWORD WINAPI DelayedShortcut(LPVOID lpParam);
 
 // Global Variables //
 HMODULE g_hDirectInputDLL = NULL;	// Handle to DirectInput8 library
+HMODULE g_hXInputDLL = NULL;		// Handle to XInput Library
 HMODULE g_hResourceDLL = NULL;		// Handle to resource library; used by LoadString for internationalization
 HANDLE g_hHeap = NULL;				// Handle to our heap
 int g_nDevices = 0;					// number of devices in g_devList
@@ -76,7 +78,7 @@ BOOL APIENTRY DllMain( HINSTANCE hModule, DWORD  ul_reason_for_call, LPVOID lpRe
 		DisableThreadLibraryCalls( hModule );
 		if( !prepareHeap())
 			return FALSE;
-		DebugWriteA("*** DLL Attach (" VERSIONNUMBER "-Debugbuild | built on " __DATE__ " at " __TIME__")\n");
+		DebugWriteA("*** DLL Attach (" VER_FILE_VERSION_STR "-Debugbuild | built on " __DATE__ " at " __TIME__")\n");
 		ZeroMemory( &g_strEmuInfo, sizeof(g_strEmuInfo) );
 		ZeroMemory( g_devList, sizeof(g_devList) );
 		ZeroMemory( &g_sysMouse, sizeof(g_sysMouse) );
@@ -148,14 +150,13 @@ BOOL APIENTRY DllMain( HINSTANCE hModule, DWORD  ul_reason_for_call, LPVOID lpRe
 EXPORT void CALL GetDllInfo ( PLUGIN_INFO* PluginInfo )
 {
 	DebugWriteA("CALLED: GetDllInfo\n");
-	strncpy(PluginInfo->Name, STRING_PLUGINNAME
 #ifdef _DEBUG
-		" (Debug)"
+	sprintf(PluginInfo->Name,"N-Rage For PJ64 (Debug): %s",VER_FILE_VERSION_STR);
+#else
+	sprintf(PluginInfo->Name,"N-Rage For PJ64: %s",VER_FILE_VERSION_STR);
 #endif
-		": " VERSIONNUMBER
-		, sizeof(PluginInfo->Name));
 	PluginInfo->Type = PLUGIN_TYPE_CONTROLLER;
-	PluginInfo->Version = SPECS_VERSION;
+	PluginInfo->Version = 0x0101;
 }
 
 /******************************************************************
@@ -172,9 +173,9 @@ EXPORT void CALL DllAbout ( HWND hParent )
 
 	LoadString( g_hResourceDLL, IDS_DLG_ABOUT_TITLE, tszTitle, DEFAULT_BUFFER );
 
-	TCHAR szText[DEFAULT_BUFFER * 4] = _T(STRING_PLUGINNAME) _T("\n\n") \
+	TCHAR szText[DEFAULT_BUFFER * 4] = _T(VER_FILE_DESCRIPTION_STR) _T("\n\n") \
 		_T("Visit my site for support:  >>http://go.to/nrage<<\n\n") \
-		_T("Version ") VERSIONINFO _T(" (") _T(__DATE__) _T(")\n") \
+		_T("Version ") VER_FILE_VERSION_STR _T(" (") _T(__DATE__) _T(")\n") \
 		_T("Done by N-Rage\n") \
 		_T("\n") \
 		_T(" - - - - -\n") \
@@ -215,6 +216,15 @@ EXPORT void CALL DllConfig ( HWND hParent )
 		}
 	}
 
+	if (g_hXInputDLL == NULL)
+	{
+		if (!InitXinput())
+		{
+			//TODO Disable ability to set XInput
+			//TODO Make XInput and DirectInput settings same page
+		}
+	}
+
 	if( g_pDIHandle && !g_bConfiguring )
 	{	
 		g_bConfiguring = true;
@@ -226,13 +236,14 @@ EXPORT void CALL DllConfig ( HWND hParent )
 		}
 		
 		EnterCriticalSection( &g_critical );
-		if( g_sysMouse.didHandle ) { // unlock mouse while configuring
+		if( g_sysMouse.didHandle )
+		{ // unlock mouse while configuring
 			g_sysMouse.didHandle->SetCooperativeLevel( g_strEmuInfo.hMainWindow, DIB_DEVICE );
 			g_sysMouse.didHandle->Acquire();
 		}
 		LeaveCriticalSection( &g_critical );
 
-		int iOK = DialogBox( g_hResourceDLL, MAKEINTRESOURCE( IDD_MAINCFGDIALOG ), hParent, MainDlgProc );
+		int iOK = DialogBox(g_hResourceDLL, MAKEINTRESOURCE(IDD_MAINCFGDIALOG), hParent, (DLGPROC)MainDlgProc);
 
 		// If we go into the dialog box, and the user navigates to the Rumble window, our FF device can get unacquired.
 		// So let's reinit them now if we're running, just to be safe --rabid
@@ -248,8 +259,10 @@ EXPORT void CALL DllConfig ( HWND hParent )
 				InitiatePaks( false );	// only re-init the mempaks and such if the user clicked Save or Use
 			}
 			
-			if( g_sysMouse.didHandle ) {
-				if ( g_bExclusiveMouse ) { // if we have exclusive mouse, we need to relock mouse after closing the config
+			if( g_sysMouse.didHandle )
+			{
+				if ( g_bExclusiveMouse )
+				{ // if we have exclusive mouse, we need to relock mouse after closing the config
 					g_sysMouse.didHandle->SetCooperativeLevel( g_strEmuInfo.hMainWindow, DIB_MOUSE );
 					g_sysMouse.didHandle->Acquire();
 					if (g_strEmuInfo.fDisplayShortPop)
@@ -260,7 +273,8 @@ EXPORT void CALL DllConfig ( HWND hParent )
 						CreateThread(NULL, 0, MsgThreadFunction, g_pszThreadMessage, 0, NULL);
 					}
 				}
-				else {
+				else
+				{
 					g_sysMouse.didHandle->SetCooperativeLevel( g_strEmuInfo.hMainWindow, DIB_KEYBOARD );
 					g_sysMouse.didHandle->Acquire();
 				}
@@ -289,21 +303,6 @@ EXPORT void CALL DllTest ( HWND hParent )
 // It's easier to maintain one version of this, as not much really changes
 // between versions.  --rabid
 
-#if SPECS_VERSION == 0x0100
-#pragma message("Conforming to Zilmar Spec 1.0")
-/******************************************************************
-  Function: InitiateControllers
-  Purpose:  This function initialises how each of the controllers 
-            should be handled.
-  input:    - The handle to the main window.
-            - A controller structure that needs to be filled for 
-			  the emulator to know how to handle each controller.
-  output:   none
-*******************************************************************/  
-EXPORT void CALL InitiateControllers( HWND hMainWindow, CONTROL Controls[4])
-
-#elif SPECS_VERSION >= 0x0101
-#pragma message("Conforming to Zilmar Spec 1.1")
 /******************************************************************
   Function: InitiateControllers
   Purpose:  This function initialises how each of the controllers 
@@ -312,23 +311,16 @@ EXPORT void CALL InitiateControllers( HWND hMainWindow, CONTROL Controls[4])
 			  the emulator to know how to handle each controller.
   output:   none
 *******************************************************************/  
-EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
-
-#endif // SPECS_VERSION
+EXPORT void CALL InitiateControllers (CONTROL_INFO * ControlInfo)
 {
 	DebugWriteA("CALLED: InitiateControllers\n");
 	if( !prepareHeap())
 		return;
 
-#if SPECS_VERSION == 0x0100
-	g_strEmuInfo.hMainWindow = hMainWindow;
-//	g_strEmuInfo.HEADER = NULL;
-#elif SPECS_VERSION >= 0x0101
-	g_strEmuInfo.hMainWindow = ControlInfo.hMainWindow;
-//	g_strEmuInfo.MemoryBswaped = ControlInfo.MemoryBswaped;
-//	g_strEmuInfo.HEADER = ControlInfo.HEADER;
+	g_strEmuInfo.hMainWindow = ControlInfo->hMainWindow;
+//	g_strEmuInfo.MemoryBswaped = ControlInfo->MemoryBswaped;
+//	g_strEmuInfo.HEADER = ControlInfo->HEADER;
 	// UNDONE: Instead of just storing the header, figure out what ROM we're running and save that information somewhere
-#endif // SPECS_VERSION
 
 	// The emulator expects us to tell what controllers are plugged in and what their paks are at this point.
 
@@ -345,6 +337,18 @@ EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 		else
 			return;
 	}
+
+	if (g_hXInputDLL == NULL)
+	{
+		if (!InitXinput())
+		{
+			//TODO Disable ability to set XInput
+			//TODO Make XInput and DirectInput settings same page
+		}
+	}
+
+	//To handle XInput controllers better, we need to set id to 0
+	iXinputControlId = 0;
 
 	int iDevice;
 
@@ -372,25 +376,19 @@ EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 		LoadShortcutsFromResource(false);
 	}
 
-	for( int i = 0; i < 4; i++)	// initiate xinput controller and plug then if connected --tecnicors
-	{
-		InitiateXInputController( &g_pcControllers[i].xiController, i );
-		if( g_pcControllers[i].xiController.bConnected )
-		{
-			g_pcControllers[i].fPlugged = true;
-			g_pcControllers[i].fGamePad = true;
-		}
-	}	// END
-
 	// Init: Find force-feedback devices and init 
-	for( int i = 3; i >= 0; i-- )
+	for( int i = 0; i < 4; i++ )
 	{
 		DebugWriteA("Controller %d: ", i+1);
-		if( g_pcControllers[i].xiController.bConnected && g_pcControllers[i].fXInput)	// if xinput connected, we don't need other config --tecnicors
-			continue;
 
 		if( g_pcControllers[i].fPlugged )
 		{
+			if (g_pcControllers[i].fXInput)
+			{
+				InitiateXInputController(&g_pcControllers[i].xiController, i);
+				continue;
+			}
+
 			// Search for right Controller
 			iDevice = FindDeviceinList( g_pcControllers[i].guidFFDevice );
 			if( iDevice != -1 && g_devList[iDevice].bEffType )
@@ -419,7 +417,8 @@ EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 
 	PrepareInputDevices();
 
-	if( g_bExclusiveMouse ) {
+	if( g_bExclusiveMouse )
+	{
 		// g_sysMouse.didHandle->Unacquire();
 		// g_sysMouse.didHandle->SetCooperativeLevel( g_strEmuInfo.hMainWindow, DIB_MOUSE ); // PrepareInputDevices does this.
 		g_sysMouse.didHandle->Acquire();
@@ -431,11 +430,7 @@ EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 
 	LeaveCriticalSection( &g_critical );
 
-#if SPECS_VERSION == 0x0100
-	FillControls(Controls);
-#elif SPECS_VERSION >= 0x0101
-	FillControls(ControlInfo.Controls);
-#endif // SPECS_VERSION
+	FillControls(ControlInfo->Controls);
 
 	return;
 } // end InitiateControllers
@@ -458,7 +453,7 @@ EXPORT void CALL RomOpen (void)
 		ErrorMessage(IDS_ERR_NOINIT, 0, false);
 		return;
 	}
-	
+
 	EnterCriticalSection( &g_critical );
 	// re-init our paks and shortcuts
 	InitiatePaks( true );
@@ -527,13 +522,14 @@ EXPORT void CALL GetKeys(int Control, BUTTONS * Keys )
 	{
 		EnterCriticalSection( &g_critical );
 		
-		if( g_pcControllers[Control].fPlugged ) {
+		if( g_pcControllers[Control].fPlugged )
+		{
 			if (Control == g_iFirstController )
 			{
 				GetDeviceDatas();
 				CheckShortcuts();
 			}
-			if( g_pcControllers[Control].xiController.bConnected && g_pcControllers[Control].fXInput )	// reads the xinput controller keys, if connected --tecnicors
+			if( g_pcControllers[Control].fXInput )	// reads the xinput controller keys, if connected --tecnicors
 				GetXInputControllerKeys( Control, &Keys->Value );
 			else
 				GetNControllerInput( Control, &Keys->Value );
@@ -609,6 +605,9 @@ EXPORT void CALL ReadController( int Control, BYTE * Command )
 		Command[3] = RD_GAMEPAD | RD_ABSOLUTE;
 		Command[4] = RD_NOEEPROM;
 
+		if (g_pcControllers[Control].fN64Mouse)		// Is Controller a mouse?
+			Command[3] = RD_RELATIVE;
+
 		if( g_pcControllers[Control].fPakInitialized && g_pcControllers[Control].pPakData )
 		{
 			if( *(BYTE*)g_pcControllers[Control].pPakData == PAK_ADAPTOID )
@@ -671,14 +670,12 @@ EXPORT void CALL ReadController( int Control, BYTE * Command )
 				GetDeviceDatas();
 				CheckShortcuts();
 			}
-			if( g_pcControllers[Control].xiController.bConnected && g_pcControllers[Control].fXInput )	// reads xinput controller kesy, if connected --tecnicors
+			if( g_pcControllers[Control].fXInput )	// reads xinput controller kesy, if connected --tecnicors
 				GetXInputControllerKeys( Control, (LPDWORD)&Command[3] );
 			else
 				GetNControllerInput( Control, (DWORD*)&Command[3] );
 		}
 		break;
-		
-
 	case RD_READPAK:
 #ifdef ENABLE_RAWPAK_DEBUG
 		WriteDatasA( "ReadPak-PreProcessing", Control, Command, 0);
@@ -698,7 +695,6 @@ EXPORT void CALL ReadController( int Control, BYTE * Command )
 		DebugWriteA( NULL );
 #endif
 		break;
-
 	case RD_WRITEPAK:
 #ifdef ENABLE_RAWPAK_DEBUG
 		WriteDatasA( "WritePak-PreProcessing", Control, Command, 0);
@@ -717,7 +713,6 @@ EXPORT void CALL ReadController( int Control, BYTE * Command )
 		DebugWriteA( NULL );
 #endif
 		break;
-
 	case RD_READEEPROM:
 		// Should be handled by the Emulator
 		WriteDatasA( "ReadEeprom-PreProcessing", Control, Command, 0);
@@ -730,7 +725,6 @@ EXPORT void CALL ReadController( int Control, BYTE * Command )
 		WriteDatasA( "WriteEeprom-PostProcessing", Control, Command, 0);
 		DebugWriteA( NULL );
 		break;
-
 	default:
 		// only accessible if the Emulator has bugs.. or maybe the Rom is flawed
 		WriteDatasA( "ReadController: Bad read", Control, Command, 0);
@@ -787,7 +781,7 @@ EXPORT void CALL CloseDLL (void)
 	// ZeroMemory( g_pcControllers, sizeof(g_pcControllers) ); // why zero the memory if we're just going to close down?
 	
 	FreeDirectInput();
-
+	FreeXinput();
 	return;
 }
 
@@ -903,6 +897,7 @@ void FillControls(CONTROL Controls[4])
 			{
 			case PAK_MEM:
 				Controls[i].Plugin = PLUGIN_MEMPAK;
+				Controls[i].RawData = false;
 				break;
 			case PAK_RUMBLE:
 				Controls[i].Plugin = PLUGIN_RUMBLE_PAK;
@@ -1013,7 +1008,6 @@ void DoShortcut( int iControl, int iShortcut )
 			LoadString( g_hResourceDLL, IDS_P_NONE, pszMessage, ARRAYSIZE(pszMessage) );
 			LeaveCriticalSection( &g_critical );
 			break;
-
 		case SC_MEMPAK:
 			if (PAK_NONE == g_pcControllers[iControl].PakType)
 			{
@@ -1028,7 +1022,6 @@ void DoShortcut( int iControl, int iShortcut )
 				bEjectFirst = true;
 			}
 			break;
-		
 		case SC_RUMBPAK:
 			if (PAK_NONE == g_pcControllers[iControl].PakType)
 			{
@@ -1070,7 +1063,6 @@ void DoShortcut( int iControl, int iShortcut )
 				bEjectFirst = true;
 			}
 			break;
-		
 		case SC_VOICEPAK:
 			if (PAK_NONE == g_pcControllers[iControl].PakType)
 			{
@@ -1086,7 +1078,6 @@ void DoShortcut( int iControl, int iShortcut )
 				bEjectFirst = true;
 			}
 			break;
-
 		case SC_ADAPTPAK:
 			if (PAK_NONE == g_pcControllers[iControl].PakType)
 			{
@@ -1102,7 +1093,6 @@ void DoShortcut( int iControl, int iShortcut )
 				bEjectFirst = true;
 			}
 			break;
-
 		case SC_SWMEMRUMB:
 			bEjectFirst = true;
 			if( g_pcControllers[iControl].PakType == PAK_MEM )
@@ -1114,7 +1104,6 @@ void DoShortcut( int iControl, int iShortcut )
 				iShortcut = PAK_MEM;
 			}
 			break;
-
 		case SC_SWMEMADAPT:
 			bEjectFirst = true;
 			if( g_pcControllers[iControl].PakType == PAK_MEM )
@@ -1126,7 +1115,6 @@ void DoShortcut( int iControl, int iShortcut )
 				iShortcut = PAK_MEM;
 			}
 			break;
-
 		default:
 			DebugWriteA("Invalid iShortcut passed to DoShortcut\n");
 			EnterCriticalSection( &g_critical );
@@ -1154,7 +1142,7 @@ void DoShortcut( int iControl, int iShortcut )
 		CreateThread(NULL, 0, DelayedShortcut, lpmNextShortcut, 0, NULL);
 		iControl = -2;	// this is just a hack to get around the check that appends "Changing Pak X to ..."
 	}
-	
+
 	if( g_strEmuInfo.fDisplayShortPop && _tcslen(pszMessage) > 0 )
 	{
 		if( iControl >= 0 )

@@ -46,7 +46,7 @@ enum MainMenuID {
 	ID_PROFILE_PROFILE, ID_PROFILE_RESETCOUNTER, ID_PROFILE_GENERATELOG,
 
 	//Help Menu
-	ID_HELP_CONTENTS, ID_HELP_GAMEFAQ, ID_HELP_SUPPORTFORUM, ID_HELP_HOMEPAGE, ID_HELP_ABOUTSETTINGFILES, ID_HELP_ABOUT, 
+	ID_HELP_SUPPORTFORUM, ID_HELP_HOMEPAGE, ID_HELP_ABOUTSETTINGFILES, ID_HELP_ABOUT, 
 };
 
 class CMainMenu :
@@ -66,9 +66,9 @@ class CMainMenu :
 	
 	void FillOutMenu ( HMENU hMenu );
 	//stdstr ShortCutString(MSC_MAP & ShortCuts, int  MenuID, CMenuShortCutKey::ACCESS_MODE AccessLevel);
-	stdstr GetSaveSlotString ( int Slot );
+	std::wstring GetSaveSlotString ( int Slot );
 	stdstr GetFileLastMod    ( stdstr FileName );
-	void      RebuildAccelerators  ( void );
+	void RebuildAccelerators  ( void );
 
 	static void SettingsChanged (CMainMenu * _this );
 public:

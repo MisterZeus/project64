@@ -10,14 +10,17 @@
 ****************************************************************************/
 #include "stdafx.h"
 
-CSystemEvents::CSystemEvents(CN64System * System) :
-	m_bDoSomething(false),
-	m_System(System)
+CSystemEvents::CSystemEvents(CN64System * System, CPlugins * Plugins) :
+	m_System(System),
+	m_Plugins(Plugins),
+	m_bDoSomething(false)
 {
+	
 }
 
 CSystemEvents::~CSystemEvents()
 {
+	
 }
 
 void CSystemEvents::QueueEvent(SystemEvent action)
@@ -35,7 +38,7 @@ void CSystemEvents::QueueEvent(SystemEvent action)
 	m_Events.push_back(action);
 }
 
-void CSystemEvents::ExecuteEvents ( void )
+void CSystemEvents::ExecuteEvents()
 {
 	EventList Events;
 	{
@@ -115,15 +118,17 @@ void CSystemEvents::ExecuteEvents ( void )
 				bLoadedSave = true;
 			}
 			break;
-		/*case SysEvent_ChangePlugins:
+		case SysEvent_ChangePlugins:
 			ChangePluginFunc();
-			break;*/
+			break;
 		case SysEvent_ChangingFullScreen:
 			g_Notify->ChangeFullScreen();
 			break;
 		case SysEvent_GSButtonPressed:
 			if (m_System->m_Cheats.CheatsSlectionChanged())
-				m_System->m_Cheats.LoadCheats(false);
+			{
+				m_System->m_Cheats.LoadCheats(false, m_Plugins);
+			}
 			m_System->m_Cheats.ApplyGSButton(g_MMU);
 			break;
 		case SysEvent_PauseCPU_FromMenu:
@@ -182,8 +187,16 @@ void CSystemEvents::ExecuteEvents ( void )
 				bPause = true;
 			}
 			break;
+		case SysEvent_PauseCPU_Settings:
+			if (!g_Settings->LoadBool(GameRunning_CPU_Paused))
+			{
+				g_Settings->SaveBool(GameRunning_CPU_Paused,true);
+				g_Settings->SaveDword(GameRunning_CPU_PausedType, PauseType_Settings);
+				bPause = true;
+			}
+			break;
 		default:
-			g_Notify->BreakPoint(__FILE__,__LINE__);
+			g_Notify->BreakPoint(__FILEW__,__LINE__);
 			break;
 		}
 	}
@@ -194,36 +207,8 @@ void CSystemEvents::ExecuteEvents ( void )
 	}
 }
 
-/*void CSystemEvents::ChangePluginFunc ( void )
+void CSystemEvents::ChangePluginFunc()
 {
 	g_Notify->DisplayMessage(0,MSG_PLUGIN_INIT);
-	if (g_Settings->LoadBool(Plugin_GFX_Changed))
-	{
-		g_Plugins->Reset(PLUGIN_TYPE_GFX);
-	}
-	if (g_Settings->LoadBool(Plugin_AUDIO_Changed))
-	{
-		g_Plugins->Reset(PLUGIN_TYPE_AUDIO);
-	}	
-	if (g_Settings->LoadBool(Plugin_CONT_Changed))
-	{
-		g_Plugins->Reset(PLUGIN_TYPE_CONTROLLER);
-	}	
-	if (g_Settings->LoadBool(Plugin_RSP_Changed) || 
-		g_Settings->LoadBool(Plugin_AUDIO_Changed) || 
-		g_Settings->LoadBool(Plugin_GFX_Changed))
-	{
-		g_Plugins->Reset(PLUGIN_TYPE_RSP);
-	}
-	g_Settings->SaveBool(Plugin_RSP_Changed,  false);
-	g_Settings->SaveBool(Plugin_AUDIO_Changed,false);
-	g_Settings->SaveBool(Plugin_GFX_Changed,  false);
-	g_Settings->SaveBool(Plugin_CONT_Changed, false);
-	g_Notify->RefreshMenu();
-	if (!g_Plugins->Initiate()) 
-	{
-		g_Notify->DisplayMessage(5,MSG_PLUGIN_NOT_INIT);
-		g_BaseSystem->m_EndEmulation = true;
-	}
-	g_Recompiler->ResetRecompCode();
-}*/
+	m_System->PluginReset();
+}

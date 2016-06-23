@@ -55,6 +55,7 @@ void init_geometry()
 
   glDisable(GL_CULL_FACE);
   glDisable(GL_DEPTH_TEST);
+  grDisplayGLError("init_geometry");
 }
 
 FX_ENTRY void FX_CALL
@@ -141,6 +142,7 @@ grCullMode( GrCullMode_t mode )
   default:
     display_warning("unknown cull mode : %x", mode);
   }
+  grDisplayGLError("grCullMode");
 }
 
 // Depth buffer
@@ -168,6 +170,7 @@ grDepthBufferMode( GrDepthBufferMode_t mode )
   default:
     display_warning("unknown depth buffer mode : %x", mode);
   }
+  grDisplayGLError("grDepthBufferMode");
 }
 
 FX_ENTRY void FX_CALL
@@ -216,6 +219,7 @@ grDepthBufferFunction( GrCmpFnc_t function )
   default:
     display_warning("unknown depth buffer function : %x", function);
   }
+  grDisplayGLError("grDepthBufferFunction");
 }
 
 FX_ENTRY void FX_CALL
@@ -223,14 +227,19 @@ grDepthMask( FxBool mask )
 {
   LOG("grDepthMask(%d)\r\n", mask);
   glDepthMask((GLboolean)mask);
+  grDisplayGLError("grDepthMask");
 }
 
 float biasFactor = 0;
 void FindBestDepthBias()
 {
+  GLfloat vertices[4][3];
   float f, bestz = 0.25f;
   int x;
-  if (biasFactor) return;
+
+  if (biasFactor)
+    return;
+
   biasFactor = 64.0f; // default value
   glPushAttrib(GL_ALL_ATTRIB_BITS);
   glEnable(GL_DEPTH_TEST);
@@ -242,14 +251,28 @@ void FindBestDepthBias()
   glDisable(GL_ALPHA_TEST);
   glColor4ub(255,255,255,255);
   glDepthMask(GL_TRUE);
-  for (x=0, f=1.0f; f<=65536.0f; x+=4, f*=2.0f) {
+
+  for (x = 0; x < 4; x++)
+    vertices[x][2] = 0.5;
+
+  for (x = 0, f = 1.0f; f <= 65536.0f; x += 4, f *= 2.0f) {
     float z;
+
+    vertices[0][0] = float(x + 4 - widtho)  / (width  / 2);
+    vertices[0][1] = float(0 + 0 - heighto) / (height / 2);
+    vertices[1][0] = float(x + 0 - widtho)  / (width  / 2);
+    vertices[1][1] = float(0 + 0 - heighto) / (height / 2);
+    vertices[2][0] = float(x + 4 - widtho)  / (width  / 2);
+    vertices[2][1] = float(0 + 4 - heighto) / (height / 2);
+    vertices[3][0] = float(x + 0 - widtho)  / (width  / 2);
+    vertices[3][1] = float(0 + 4 - heighto) / (height / 2);
     glPolygonOffset(0, f);
+
     glBegin(GL_TRIANGLE_STRIP);
-    glVertex3f(float(x+4 - widtho)/(width/2), float(0 - heighto)/(height/2), 0.5);
-    glVertex3f(float(x - widtho)/(width/2), float(0 - heighto)/(height/2), 0.5);
-    glVertex3f(float(x+4 - widtho)/(width/2), float(4 - heighto)/(height/2), 0.5);
-    glVertex3f(float(x - widtho)/(width/2), float(4 - heighto)/(height/2), 0.5);
+    glVertex3fv(vertices[0]);
+    glVertex3fv(vertices[1]);
+    glVertex3fv(vertices[2]);
+    glVertex3fv(vertices[3]);
     glEnd();
 
     glReadPixels(x+2, 2+viewport_offset, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
@@ -264,6 +287,7 @@ void FindBestDepthBias()
   }
   //printf(" --> bias factor %g\n", biasFactor);
   glPopAttrib();
+  grDisplayGLError("FindBestDepthBias");
 }
 
 FX_ENTRY void FX_CALL
@@ -283,6 +307,7 @@ grDepthBiasLevel( FxI32 level )
     glPolygonOffset(0,0);
     glDisable(GL_POLYGON_OFFSET_FILL);
   }
+  grDisplayGLError("grDepthBiasLevel");
 }
 
 // draw
@@ -421,6 +446,7 @@ grDrawTriangle( const void *a, const void *b, const void *c )
     -(*c_y - (float)heighto) / (float)(height/2) / *c_q, ZCALC(*c_z ,*c_q), 1.0f / *c_q);
 
   glEnd();
+  grDisplayGLError("grDrawTriangle");
 }
 
 FX_ENTRY void FX_CALL
@@ -478,6 +504,7 @@ grDrawPoint( const void *pt )
     -(*y - (float)heighto) / (float)(height/2) / *q, ZCALC(*z ,*q), 1.0f / *q);
 
   glEnd();
+  grDisplayGLError("grDrawPoint");
 }
 
 FX_ENTRY void FX_CALL
@@ -570,6 +597,7 @@ grDrawLine( const void *a, const void *b )
     -(*b_y - (float)heighto) / (float)(height/2) / *b_q, ZCALC(*b_z, *b_q), 1.0f / *b_q);
 
   glEnd();
+  grDisplayGLError("grDrawLine");
 }
 
 FX_ENTRY void FX_CALL
@@ -641,6 +669,8 @@ grDrawVertexArray(FxU32 mode, FxU32 Count, void *pointers2)
       -(*y - (float)heighto) / (float)(height/2) / *q, ZCALC(*z, *q), 1.0f / *q);
   }
   glEnd();
+
+  grDisplayGLError("grDrawVertexArray");
 }
 
 FX_ENTRY void FX_CALL
@@ -717,4 +747,6 @@ grDrawVertexArrayContiguous(FxU32 mode, FxU32 Count, void *pointers, FxU32 strid
       -(*y - (float)heighto) / (float)(height/2) / *q, ZCALC(*z, *q), 1.0f / *q);
   }
   glEnd();
+
+  grDisplayGLError("grDrawVertexArrayContiguous");
 }

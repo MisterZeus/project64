@@ -9,6 +9,8 @@
 *                                                                           *
 ****************************************************************************/
 #include "stdafx.h"
+
+#ifdef WINDOWS_UI
 #include "Settings Page.h"
 
 COptionPluginPage::COptionPluginPage (HWND hParent, const RECT & rcDispay )
@@ -19,18 +21,18 @@ COptionPluginPage::COptionPluginPage (HWND hParent, const RECT & rcDispay )
 	}
 	
 	//Set the text for all gui Items
-	SetDlgItemText(RSP_ABOUT,GS(PLUG_ABOUT));
-	SetDlgItemText(GFX_ABOUT,GS(PLUG_ABOUT));
-	SetDlgItemText(AUDIO_ABOUT,GS(PLUG_ABOUT));
-	SetDlgItemText(CONT_ABOUT,GS(PLUG_ABOUT));
+	SetDlgItemTextW(m_hWnd, RSP_ABOUT,GS(PLUG_ABOUT));
+	SetDlgItemTextW(m_hWnd, GFX_ABOUT,GS(PLUG_ABOUT));
+	SetDlgItemTextW(m_hWnd, AUDIO_ABOUT,GS(PLUG_ABOUT));
+	SetDlgItemTextW(m_hWnd, CONT_ABOUT,GS(PLUG_ABOUT));
 
-	SetDlgItemText(IDC_RSP_NAME,GS(PLUG_RSP));
-	SetDlgItemText(IDC_GFX_NAME,GS(PLUG_GFX));
-	SetDlgItemText(IDC_AUDIO_NAME,GS(PLUG_AUDIO));
-	SetDlgItemText(IDC_CONT_NAME,GS(PLUG_CTRL));		
+	SetDlgItemTextW(m_hWnd, IDC_RSP_NAME,GS(PLUG_RSP));
+	SetDlgItemTextW(m_hWnd, IDC_GFX_NAME,GS(PLUG_GFX));
+	SetDlgItemTextW(m_hWnd, IDC_AUDIO_NAME,GS(PLUG_AUDIO));
+	SetDlgItemTextW(m_hWnd, IDC_CONT_NAME,GS(PLUG_CTRL));		
 	
-	SetDlgItemText(IDC_HLE_GFX,GS(PLUG_HLE_GFX));
-	SetDlgItemText(IDC_HLE_AUDIO,GS(PLUG_HLE_AUDIO));		
+	SetDlgItemTextW(m_hWnd, IDC_HLE_GFX,GS(PLUG_HLE_GFX));
+	SetDlgItemTextW(m_hWnd, IDC_HLE_AUDIO,GS(PLUG_HLE_AUDIO));		
 
 	m_GfxGroup.Attach(GetDlgItem(IDC_GFX_NAME));
 	m_AudioGroup.Attach(GetDlgItem(IDC_AUDIO_NAME));
@@ -247,15 +249,6 @@ void COptionPluginPage::ApplyComboBoxes ( void )
 			const CPluginList::PLUGIN * Plugin = *PluginPtr;
 
 			g_Settings->SaveString(cb_iter->first,Plugin->FileName.c_str());
-			switch (Plugin->Info.Type)
-			{
-			case PLUGIN_TYPE_RSP:        g_Settings->SaveBool(Plugin_RSP_Changed,true); break;
-			case PLUGIN_TYPE_GFX:        g_Settings->SaveBool(Plugin_GFX_Changed,true); break;
-			case PLUGIN_TYPE_AUDIO:      g_Settings->SaveBool(Plugin_AUDIO_Changed,true); break;
-			case PLUGIN_TYPE_CONTROLLER: g_Settings->SaveBool(Plugin_CONT_Changed,true); break;
-			default:
-				g_Notify->BreakPoint(__FILE__,__LINE__);
-			}
 		}
 		if (ComboBox->IsReset())
 		{
@@ -304,7 +297,7 @@ void COptionPluginPage::HleGfxChanged ( UINT /*Code*/, int id, HWND /*ctl*/ )
 		}			
 		if ((Button->GetCheck() & BST_CHECKED) == 0)
 		{
-			int res = MessageBox(GS(MSG_SET_LLE_GFX_MSG),GS(MSG_SET_LLE_GFX_TITLE),MB_YESNO|MB_ICONWARNING);
+			int res = MessageBoxW(m_hWnd, GS(MSG_SET_LLE_GFX_MSG),GS(MSG_SET_LLE_GFX_TITLE),MB_YESNO|MB_ICONWARNING);
 			if (res != IDYES)
 			{
 				Button->SetCheck(BST_CHECKED);
@@ -328,7 +321,7 @@ void COptionPluginPage::HleAudioChanged ( UINT /*Code*/, int id, HWND /*ctl*/ )
 		}			
 		if ((Button->GetCheck() & BST_CHECKED) != 0)
 		{
-			int res = MessageBox(GS(MSG_SET_HLE_AUD_MSG),GS(MSG_SET_HLE_AUD_TITLE),MB_ICONWARNING|MB_YESNO);
+			int res = MessageBoxW(m_hWnd, GS(MSG_SET_HLE_AUD_MSG),GS(MSG_SET_HLE_AUD_TITLE),MB_ICONWARNING|MB_YESNO);
 			if (res != IDYES)
 			{
 				Button->SetCheck(BST_UNCHECKED);
@@ -340,3 +333,4 @@ void COptionPluginPage::HleAudioChanged ( UINT /*Code*/, int id, HWND /*ctl*/ )
 		break;
 	}
 }
+#endif
